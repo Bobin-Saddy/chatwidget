@@ -2,12 +2,11 @@
 
 client_id = "e1d0e7c199542db846773e48228165d1"
 name = "commercial-chatwidget"
-application_url = "https://example.com"
+application_url = "https://chatwidget-production-0035.up.railway.app/"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
-include_config_on_deploy = true
 
 [webhooks]
 api_version = "2026-01"
