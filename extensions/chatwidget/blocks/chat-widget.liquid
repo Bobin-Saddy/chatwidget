@@ -225,7 +225,7 @@
   async function loadMessages() {
     const sessionId = localStorage.getItem("chat_session");
     try {
-      const res = await fetch(`${APP_URL}/api/chat/messages?shop=${shop}&sessionId=${sessionId}`);
+      const res = await fetch(`${APP_URL}/app/chat/messages?shop=${shop}&sessionId=${sessionId}`);
       const data = await res.json();
       msgBox.innerHTML = ''; 
       data.forEach(addMessageToUI);
@@ -240,7 +240,7 @@
     chatInput.value = "";
     addMessageToUI({ sender: 'user', message: text });
 
-    await fetch(`${APP_URL}/api/chat/message`, {
+    await fetch(`${APP_URL}/app/chat/message`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 
