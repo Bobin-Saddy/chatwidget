@@ -33,10 +33,10 @@
       <p>Please enter your details to start.</p>
       <div class="input-group">
         <div class="name-row">
-          <input id="chat-fname" type="text" placeholder="First Name" autocomplete="given-name" />
-          <input id="chat-lname" type="text" placeholder="Last Name" autocomplete="family-name" />
+          <input id="chat-fname" type="text" placeholder="First Name" />
+          <input id="chat-lname" type="text" placeholder="Last Name" />
         </div>
-        <input id="chat-email" type="email" placeholder="Email Address" autocomplete="email" />
+        <input id="chat-email" type="email" placeholder="Email Address" />
         <button id="chat-submit-info" style="background: {{ primary_color }};">Let's Start Chat</button>
       </div>
     </div>
@@ -44,7 +44,6 @@
 
   <div id="chat-chat-step" class="step-container" style="display:none;">
     <div id="chat-messages"></div>
-    
     <div id="chat-footer">
       <div id="emoji-picker-container" class="hidden-picker">
         <div class="picker-header">
@@ -53,11 +52,8 @@
         </div>
         <div id="emoji-grid"></div>
       </div>
-
       <div class="input-wrapper">
-        <div class="action-buttons">
-          <button id="emoji-btn" type="button" class="tool-btn">😊</button>
-        </div>
+        <button id="emoji-btn" type="button" class="tool-btn">😊</button>
         <input id="chat-input" placeholder="Type a message..." autocomplete="off" />
         <button id="chat-send" style="background: {{ primary_color }};">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
@@ -68,70 +64,48 @@
 </div>
 
 <style>
-:root { --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
-
-#chat-launcher {
-  position: fixed; bottom: 25px; right: 25px; width: 64px; height: 64px;
-  border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  cursor: pointer; z-index: 2147483647; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-#chat-widget {
-  position: fixed; bottom: 105px; right: 25px; width: 370px; height: 580px;
-  background: #fff; border-radius: 20px; display: flex; flex-direction: column;
-  box-shadow: var(--shadow-lg); z-index: 2147483647; overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+/* CSS Styles */
+#chat-launcher { position: fixed; bottom: 25px; right: 25px; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2147483647; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+#chat-widget { position: fixed; bottom: 105px; right: 25px; width: 370px; height: 580px; background: #fff; border-radius: 20px; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 2147483647; overflow: hidden; transition: all 0.3s ease; }
 .chat-hidden { opacity: 0; transform: translateY(20px); pointer-events: none; visibility: hidden; }
 .chat-visible { opacity: 1; transform: translateY(0); pointer-events: all; visibility: visible; }
-
 #chat-header { padding: 20px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
 .header-content { display: flex; align-items: center; gap: 12px; }
-.avatar-stack img { width: 42px; height: 42px; border-radius: 12px; background: #fff; }
-.avatar-status { position: absolute; width: 12px; height: 12px; background: #22c55e; border: 2px solid #6366f1; border-radius: 50%; bottom: 20px; left: 52px; z-index: 2; }
-
+.avatar-stack img { width: 42px; height: 42px; border-radius: 12px; }
 .step-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .welcome-card { padding: 40px 25px; text-align: center; }
-.input-group { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.input-group { display: flex; flex-direction: column; gap: 10px; padding: 0 20px; }
 .name-row { display: flex; gap: 10px; }
 .input-group input { padding: 12px; border: 1px solid #ddd; border-radius: 10px; width: 100%; outline: none; }
-
 #chat-messages { flex: 1; padding: 20px; background: #f9fafb; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-.msg { max-width: 80%; padding: 10px 14px; border-radius: 15px; font-size: 14px; line-height: 1.4; }
+.msg { max-width: 80%; padding: 10px 14px; border-radius: 15px; font-size: 14px; }
 .msg.user { align-self: flex-end; background: {{ primary_color }}; color: white; border-bottom-right-radius: 4px; }
 .msg.admin { align-self: flex-start; background: #e5e7eb; color: #1f2937; border-bottom-left-radius: 4px; }
-
-#chat-footer { padding: 15px; border-top: 1px solid #eee; background: #fff; position: relative; }
+#chat-footer { padding: 15px; border-top: 1px solid #eee; position: relative; }
 .input-wrapper { display: flex; align-items: center; background: #f3f4f6; border-radius: 25px; padding: 5px 15px; gap: 10px; }
 #chat-input { flex: 1; border: none; background: transparent; padding: 10px 0; outline: none; pointer-events: auto !important; }
 .tool-btn { border: none; background: none; cursor: pointer; font-size: 18px; }
-
-/* Emoji Picker UI */
-#emoji-picker-container {
-  position: absolute; bottom: 80px; left: 10px; right: 10px; background: #fff;
-  border: 1px solid #eee; border-radius: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); z-index: 100;
-}
+#emoji-picker-container { position: absolute; bottom: 80px; left: 10px; right: 10px; background: #fff; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); z-index: 100; }
 .picker-header { padding: 8px 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; }
-#close-emoji-picker { border: none; background: none; cursor: pointer; color: #999; font-size: 16px; }
-#emoji-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; padding: 10px; max-height: 150px; overflow-y: auto; }
+#close-emoji-picker { border: none; background: none; cursor: pointer; color: #999; }
+#emoji-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; padding: 10px; }
 #emoji-grid span { cursor: pointer; font-size: 20px; text-align: center; }
 .hidden-picker { display: none !important; }
-
-@keyframes pulse-anim { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-.pulse { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; animation: pulse-anim 2s infinite; }
+.pulse { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; display: inline-block; }
 </style>
 
 <script>
 (() => {
   const shop = "{{ shop.permanent_domain }}";
-  const APP_URL = "https://chatwidget-production-0035.up.railway.app/"; 
+  // Removed trailing slash to fix the //app/ issue
+  const APP_URL = "https://chatwidget-production-0035.up.railway.app"; 
 
   const widget = document.getElementById("chat-widget");
   const launcher = document.getElementById("chat-launcher");
   const chatInput = document.getElementById("chat-input");
   const emojiPicker = document.getElementById("emoji-picker-container");
+  const msgBox = document.getElementById("chat-messages");
 
-  // Toggle Widget
   launcher.onclick = () => {
     const isVisible = widget.classList.toggle("chat-visible");
     widget.classList.toggle("chat-hidden", !isVisible);
@@ -141,7 +115,6 @@
 
   document.getElementById("chat-close").onclick = () => launcher.click();
 
-  // Emoji Logic
   const emojis = ["😊","👋","🙌","🔥","✅","🤔","💡","🚀","❤️","✨","😂","👍"];
   const grid = document.getElementById("emoji-grid");
   grid.innerHTML = emojis.map(e => `<span>${e}</span>`).join("");
@@ -156,20 +129,19 @@
   grid.onclick = (e) => {
     if(e.target.tagName === 'SPAN') {
       chatInput.value += e.target.innerText;
-      chatInput.focus(); // IMPORTANT: Keep input focused
+      chatInput.focus();
     }
   };
 
-  // Submit User Info
   document.getElementById("chat-submit-info").onclick = async () => {
     const fname = document.getElementById("chat-fname").value.trim();
     const email = document.getElementById("chat-email").value.trim();
-    if(!fname || !email) return alert("Required fields missing");
+    if(!fname || !email) return alert("Missing fields");
 
     localStorage.setItem("chat_user_email", email);
     localStorage.setItem("chat_session", Date.now().toString());
 
-    await fetch(`${APP_URL}app/chat/register`, {
+    await fetch(`${APP_URL}/app/chat/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ shop, fname, email, sessionId: localStorage.getItem("chat_session") })
@@ -179,12 +151,10 @@
     document.getElementById("chat-chat-step").style.display = "flex";
   };
 
-  // Send Message
   const sendMessage = async () => {
     const text = chatInput.value.trim();
     if(!text) return;
 
-    const msgBox = document.getElementById("chat-messages");
     const div = document.createElement("div");
     div.className = "msg user";
     div.innerText = text;
@@ -194,7 +164,7 @@
     chatInput.value = "";
     emojiPicker.classList.add("hidden-picker");
 
-    await fetch(`${APP_URL}app/chat/message`, {
+    await fetch(`${APP_URL}/app/chat/message`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -209,7 +179,6 @@
   document.getElementById("chat-send").onclick = sendMessage;
   chatInput.onkeypress = (e) => { if(e.key === "Enter") sendMessage(); };
 
-  // Sync Check
   if(localStorage.getItem("chat_user_email")) {
     document.getElementById("chat-onboarding-step").style.display = "none";
     document.getElementById("chat-chat-step").style.display = "flex";
