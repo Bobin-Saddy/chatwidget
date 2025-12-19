@@ -2,16 +2,12 @@ import { json } from "@remix-run/node";
 import { db } from "../db.server";
 
 export const action = async ({ request }) => {
+  const headers = { "Access-Control-Allow-Origin": "*" };
   const { shop, sessionId, message } = await request.json();
 
   await db.chatMessage.create({
-    data: {
-      shop,
-      sessionId,
-      sender: "user",
-      message,
-    },
+    data: { shop, sessionId, sender: "user", message },
   });
 
-  return json({ success: true });
+  return json({ success: true }, { headers });
 };

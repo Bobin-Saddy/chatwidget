@@ -2,6 +2,7 @@ import { json } from "@remix-run/node";
 import { db } from "../db.server";
 
 export const loader = async ({ request }) => {
+  const headers = { "Access-Control-Allow-Origin": "*" };
   const url = new URL(request.url);
   const shop = url.searchParams.get("shop");
   const sessionId = url.searchParams.get("sessionId");
@@ -11,5 +12,5 @@ export const loader = async ({ request }) => {
     orderBy: { createdAt: "asc" },
   });
 
-  return json(messages);
+  return json(messages, { headers });
 };
