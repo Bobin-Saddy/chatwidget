@@ -1,10 +1,16 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
 
+// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
+// enough when changing adapters.
+// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
 datasource db {
-  provider = "postgresql" // Badla gaya
-  url      = env("DATABASE_URL") // Railway se mili URL
+  provider = "sqlite"
+  url      = "file:dev.sqlite"
 }
 
 model Session {
@@ -23,27 +29,28 @@ model Session {
   locale        String?
   collaborator  Boolean?  @default(false)
   emailVerified Boolean?  @default(false)
-  refreshToken  String?
+  refreshToken        String?
   refreshTokenExpires DateTime?
 }
 
+
 model ChatSession {
-  id          String        @id @default(cuid())
+  id          String    @id @default(cuid())
   shop        String
-  sessionId   String        @unique
+  sessionId   String    @unique
   firstName   String?
   lastName    String?
   email       String?
   messages    ChatMessage[]
-  createdAt   DateTime      @default(now())
+  createdAt   DateTime  @default(now())
 }
 
 model ChatMessage {
-  id            Int         @id @default(autoincrement())
+  id            Int          @id @default(autoincrement())
   chatSessionId String
-  session       ChatSession @relation(fields: [chatSessionId], references: [sessionId])
-  message       String      @db.Text // Postgres mein isse bada text save hoga
-  sender        String      // "user" or "admin"
+  session       ChatSession  @relation(fields: [chatSessionId], references: [sessionId])
+  message       String       // Removed @db.Text for SQLite compatibility
+  sender        String       // "user" or "admin"
   fileUrl       String?
-  createdAt     DateTime    @default(now())
+  createdAt     DateTime     @default(now())
 }
