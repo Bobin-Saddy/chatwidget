@@ -10,38 +10,40 @@ const corsHeaders = {
 export const loader = () => json({}, { headers: corsHeaders });
 
 export const action = async ({ request }) => {
-  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
 
   try {
-    const { sessionId, message, shop, email } = await request.json();
+    const body = await request.json();
+    const { sessionId, message, shop, email } = body;
 
-    // 1. Session ko confirm karein (Upsert)
+    // 1. Ensure Session exists (Upsert logic)
+    // Yeh step zaroori hai agar DB reset ho gaya ho
     const chatSession = await db.chatSession.upsert({
       where: { sessionId: sessionId },
       update: {},
       create: {
         sessionId: sessionId,
-        shop: shop || "unknown",
+        shop: shop || "unknown.myshopify.com",
         email: email || "guest@example.com",
-        firstName: "User"
+        firstName: "Customer"
       }
     });
 
-    // 2. Message save karein (Sirf session relation use karein)
+    // 2. Create Message
     const newMessage = await db.chatMessage.create({
-      data: { 
+      data: {
         message: message,
         sender: "user",
-        session: {
-          connect: { sessionId: chatSession.sessionId }
-        }
-        // chatSessionId yahan nahi likhna hai, Prisma 'connect' se khud handle karega
-      },
+        // Ham explicitly ID provide kar rahe hain jo schema expect kar raha hai
+        chatSessionId: chatSession.sessionId 
+      }
     });
 
-    return json({ success: true, newMessage }, { headers: corsHeaders });
+    return json({ success: true, data: newMessage }, { headers: corsHeaders });
   } catch (error) {
-    console.error("Save Error:", error);
-    return json({ error: "Database Validation Error", details: error.message }, { status: 500, headers: corsHeaders });
+    console.error("Database Save Error:", error);
+    return json({ error: error.message }, { status: 500, headers: corsHeaders });
   }
 };
