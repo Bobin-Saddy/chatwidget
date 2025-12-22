@@ -4,27 +4,30 @@ import { db } from "../db.server";
 export const loader = async ({ request }) => {
   const headers = { 
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Content-Type": "application/json" 
   };
   
-  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
-
   const url = new URL(request.url);
   const sessionId = url.searchParams.get("sessionId");
 
   if (!sessionId) {
-    return json({ error: "Missing sessionId" }, { status: 400, headers });
+    return json([], { headers }); // Return empty array instead of error
   }
 
   try {
     const messages = await db.chatMessage.findMany({
-      where: { chatSessionId: sessionId },
+      where: { 
+        // Ensure this matches the sessionId sent in POST
+        session: {
+          sessionId: sessionId
+        }
+      },
       orderBy: { createdAt: "asc" },
     });
 
     return json(messages, { headers });
   } catch (error) {
-    return json({ error: "Internal Server Error" }, { status: 500, headers });
+    console.error("Fetch Messages Error:", error);
+    return json([], { status: 500, headers });
   }
 };

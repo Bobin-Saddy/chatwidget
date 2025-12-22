@@ -198,7 +198,10 @@
   }
 
   navItems.forEach(item => item.addEventListener('click', () => switchTab(item.dataset.tab)));
-  document.getElementById('start-chat-trigger').addEventListener('click', () => switchTab('chat'));
+ document.getElementById('start-chat-trigger').addEventListener('click', () => {
+    switchTab('chat');
+    loadMessages(); // Force load once
+});
 
   launcher.addEventListener('click', () => {
     const isVisible = widget.classList.contains("chat-visible");
@@ -225,18 +228,28 @@
     msgBox.scrollTop = msgBox.scrollHeight;
   };
 
-  async function loadMessages() {
-    const sessionId = localStorage.getItem("chat_session");
-    if (!sessionId) return;
-    try {
-      const res = await fetch(getUrl(`app/chat/messages?shop=${shop}&sessionId=${sessionId}`));
-      if (res.ok) {
-        const data = await res.json();
+async function loadMessages() {
+  // Har baar check karein ki current session ID kya hai
+  const sessionId = localStorage.getItem("chat_session");
+  if (!sessionId) return;
+
+  try {
+    const res = await fetch(`${BASE_URL}/app/chat/messages?shop=${shop}&sessionId=${sessionId}`);
+    if (res.ok) {
+      const data = await res.json();
+      
+      // Screen tabhi update karein jab naye messages hon
+      const currentMsgCount = msgBox.querySelectorAll('.msg').length;
+      if (data.length > currentMsgCount) {
         msgBox.innerHTML = ''; 
         data.forEach(addMessageToUI);
+        msgBox.scrollTo({ top: msgBox.scrollHeight, behavior: 'smooth' });
       }
-    } catch (e) { console.error("Sync error:", e); }
+    }
+  } catch (e) {
+    console.error("Sync error");
   }
+}
 
   // Registration Logic
 document.getElementById("chat-submit-info").onclick = async () => {
