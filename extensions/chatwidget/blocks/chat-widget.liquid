@@ -268,37 +268,31 @@ document.getElementById("chat-submit-info").onclick = async () => {
 };
 
   // Message Sending Logic (FIXED)
-// handleSend function in your Shopify Section
 async function handleSend() {
   const text = chatInput.value.trim();
   const sId = localStorage.getItem("chat_session");
   
   if (!text || !sId) return;
 
-  // Immediate UI update (Optimistic)
   addMessageToUI({ sender: 'user', message: text });
   chatInput.value = "";
 
   try {
     const response = await fetch(`${BASE_URL}/app/chat/message`, {
       method: "POST",
-      // mode: 'cors' use karein
-      mode: 'cors',
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      body: JSON.stringify({ 
-        sessionId: sId, 
-        message: text 
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId: sId, message: text })
     });
     
-    if (!response.ok) {
-       console.log("Server rejected with status:", response.status);
+    // AGAR SESSION NA MILE (Error 400)
+    if (response.status === 400) {
+       console.warn("Session expired. Clearing storage...");
+       localStorage.removeItem("chat_session");
+       localStorage.removeItem("chat_user_email");
+       window.location.reload(); // Page reload karke user ko wapas onboarding dikhao
     }
   } catch (e) {
-    console.error("Fetch block ho gaya (CORS/Network):", e);
+    console.error("Network error:", e);
   }
 }
 
