@@ -27,17 +27,28 @@ export default function ChatAdmin() {
     setActiveSession(id);
   };
 
-  const handleReply = () => {
-    if (!reply) return;
-    fetcher.submit(
-      { sessionId: activeSession, message: reply, sender: "admin" },
-      { method: "post", action: "/app/chat/message" }
-    );
-    setReply("");
-    // Optimistic UI update
-    setMessages([...messages, { message: reply, sender: "admin", createdAt: new Date() }]);
+const handleReply = () => {
+  if (!reply) return;
+
+  const data = { 
+    sessionId: activeSession, 
+    message: reply, 
+    sender: "admin" 
   };
 
+  fetcher.submit(
+    JSON.stringify(data), // Data ko stringify karein
+    { 
+      method: "post", 
+      action: "/app/chat/message",
+      encType: "application/json" // Yeh sabse important line hai
+    }
+  );
+
+  setReply("");
+  // Local state update karein taaki msg turant dikhe
+  setMessages([...messages, { message: reply, sender: "admin", createdAt: new Date() }]);
+};
   return (
     <Page title="Customer Support Chat">
       <Layout>

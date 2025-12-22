@@ -9,33 +9,38 @@ const corsHeaders = {
 
 export const loader = () => json({}, { headers: corsHeaders });
 
-// app.chat.message.jsx
 export const action = async ({ request }) => {
-  const { sessionId, message, sender, shop, email } = await request.json();
+  // CORS Headers for safety
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
+
+  if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // 1. Confirm session
-    const session = await db.chatSession.upsert({
-      where: { sessionId: sessionId },
-      update: {},
-      create: { 
-        sessionId, 
-        shop: shop || "myshopify.com", 
-        email: email || "customer@email.com" 
-      }
-    });
+    // Check if the request is actually JSON
+    const body = await request.json();
+    const { sessionId, message, sender, shop } = body;
 
-    // 2. Save message (User or Admin)
+    if (!sessionId || !message) {
+      return json({ error: "Missing data" }, { status: 400, headers: corsHeaders });
+    }
+
     const newMessage = await db.chatMessage.create({
       data: {
         message: message,
-        sender: sender || "user", // "admin" pass hoga dashboard se
-        chatSessionId: session.sessionId
-      }
+        sender: sender || "user",
+        session: {
+          connect: { sessionId: sessionId }
+        }
+      },
     });
 
-    return json({ success: true, newMessage });
+    return json({ success: true, newMessage }, { headers: corsHeaders });
   } catch (error) {
-    return json({ error: error.message }, { status: 500 });
+    console.error("Reply Error:", error);
+    return json({ error: "Invalid JSON format" }, { status: 500, headers: corsHeaders });
   }
 };
