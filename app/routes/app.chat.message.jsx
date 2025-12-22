@@ -14,15 +14,15 @@ export const action = async ({ request }) => {
     const { sessionId, message } = await request.json();
 
     if (!sessionId || !message) {
-      return json({ error: "Missing sessionId or message" }, { status: 400, headers: corsHeaders });
+      return json({ error: "Missing data" }, { status: 400, headers: corsHeaders });
     }
 
-    // Message create karein
+    // Prisma creation according to your schema
     const newMessage = await db.chatMessage.create({
       data: { 
         message: message,
         sender: "user",
-        // Aapke schema mein relation name 'session' hai
+        // RELATION NAME: Aapke schema mein 'session' likha hai
         session: {
           connect: { sessionId: sessionId }
         }
@@ -31,7 +31,7 @@ export const action = async ({ request }) => {
 
     return json({ success: true, newMessage }, { headers: corsHeaders });
   } catch (error) {
-    console.error("Prisma Save Error:", error);
-    return json({ error: error.message }, { status: 500, headers: corsHeaders });
+    console.error("Final Prisma Error:", error);
+    return json({ error: "Database error", details: error.message }, { status: 500, headers: corsHeaders });
   }
 };
