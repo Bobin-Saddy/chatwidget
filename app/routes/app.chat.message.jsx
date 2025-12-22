@@ -9,41 +9,33 @@ const corsHeaders = {
 
 export const loader = () => json({}, { headers: corsHeaders });
 
+// app.chat.message.jsx
 export const action = async ({ request }) => {
-  if (request.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: corsHeaders });
-  }
+  const { sessionId, message, sender, shop, email } = await request.json();
 
   try {
-    const body = await request.json();
-    const { sessionId, message, shop, email } = body;
-
-    // 1. Ensure Session exists (Upsert logic)
-    // Yeh step zaroori hai agar DB reset ho gaya ho
-    const chatSession = await db.chatSession.upsert({
+    // 1. Confirm session
+    const session = await db.chatSession.upsert({
       where: { sessionId: sessionId },
       update: {},
-      create: {
-        sessionId: sessionId,
-        shop: shop || "unknown.myshopify.com",
-        email: email || "guest@example.com",
-        firstName: "Customer"
+      create: { 
+        sessionId, 
+        shop: shop || "myshopify.com", 
+        email: email || "customer@email.com" 
       }
     });
 
-    // 2. Create Message
+    // 2. Save message (User or Admin)
     const newMessage = await db.chatMessage.create({
       data: {
         message: message,
-        sender: "user",
-        // Ham explicitly ID provide kar rahe hain jo schema expect kar raha hai
-        chatSessionId: chatSession.sessionId 
+        sender: sender || "user", // "admin" pass hoga dashboard se
+        chatSessionId: session.sessionId
       }
     });
 
-    return json({ success: true, data: newMessage }, { headers: corsHeaders });
+    return json({ success: true, newMessage });
   } catch (error) {
-    console.error("Database Save Error:", error);
-    return json({ error: error.message }, { status: 500, headers: corsHeaders });
+    return json({ error: error.message }, { status: 500 });
   }
 };

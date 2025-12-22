@@ -20,7 +20,7 @@ export default function App() {
       <PolarisAppProvider i18n={enTranslations}>
         <s-app-nav>
           <s-link href="/app">Home</s-link>
-          <s-link href="/app/chat-users">Chat page</s-link>
+          <s-link href="/app/chat/admin">Chat page</s-link>
         </s-app-nav>
         <Outlet />
       </PolarisAppProvider>
