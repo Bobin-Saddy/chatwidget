@@ -8,7 +8,6 @@ export const loader = async ({ request }) => {
   };
   
   const url = new URL(request.url);
-  // Get the sessionId from the URL
   const sessionId = url.searchParams.get("sessionId");
 
   if (!sessionId) {
@@ -17,17 +16,12 @@ export const loader = async ({ request }) => {
 
   try {
     const messages = await db.chatMessage.findMany({
-      where: { 
-        // Changed from 'sessionId' to 'chatSessionId' based on your Prisma error
-        chatSessionId: sessionId 
-        // Removed 'shop' because it doesn't exist on the ChatMessage model
-      },
+      where: { chatSessionId: sessionId },
       orderBy: { createdAt: "asc" },
     });
 
     return json(messages, { headers });
   } catch (error) {
-    console.error("Prisma Error:", error);
     return json({ error: "Internal Server Error" }, { status: 500, headers });
   }
 };
