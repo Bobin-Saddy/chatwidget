@@ -239,7 +239,6 @@
   }
 
   // Registration Logic
-  document.getElementById("chat-submit-info").onclick = async () => {
 document.getElementById("chat-submit-info").onclick = async () => {
   const fname = document.getElementById("chat-fname").value.trim();
   const email = document.getElementById("chat-email").value.trim();
@@ -267,6 +266,7 @@ document.getElementById("chat-submit-info").onclick = async () => {
     console.error("Registration Error", e);
   }
 };
+
   // Message Sending Logic (FIXED)
 // handleSend function in your Shopify Section
 async function handleSend() {
