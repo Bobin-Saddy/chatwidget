@@ -267,34 +267,30 @@
   };
 
   // Message Sending Logic (FIXED)
-  async function handleSend() {
-    const text = chatInput.value.trim();
-    const sessionId = localStorage.getItem("chat_session");
-    const email = localStorage.getItem("chat_user_email");
+async function handleSend() {
+  const text = chatInput.value.trim();
+  const sId = localStorage.getItem("chat_session");
+  if (!text || !sId) return;
+
+  // 1. UI mein turant message dikhao (Isse show na hone wali problem solve hogi)
+  addMessageToUI({ sender: 'user', message: text });
+  chatInput.value = "";
+
+  // 2. Server ko bhejien
+  try {
+    const response = await fetch(`${BASE_URL}/app/chat/message`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId: sId, message: text })
+    });
     
-    if (!text || !sessionId) return;
-
-    // 1. Immediate UI update (Optimistic UI)
-    addMessageToUI({ sender: 'user', message: text });
-    chatInput.value = "";
-
-    // 2. Send to Backend
-    try {
-      await fetch(getUrl("app/chat/message"), {
-        method: "POST",
-        mode: 'cors', // Ensure CORS is handled
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-            shop: shop, 
-            sessionId: sessionId, 
-            message: text, 
-            email: email 
-        })
-      });
-    } catch (e) {
-      console.error("Message send error:", e);
+    if (!response.ok) {
+       console.error("Server error while saving message");
     }
+  } catch (e) {
+    console.error("Fetch failed", e);
   }
+}
 
   document.getElementById("chat-send").onclick = handleSend;
   chatInput.onkeydown = (e) => {
