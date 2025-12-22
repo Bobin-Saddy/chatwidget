@@ -2,15 +2,32 @@ import { json } from "@remix-run/node";
 import { db } from "../db.server";
 
 export const loader = async ({ request }) => {
-  const headers = { "Access-Control-Allow-Origin": "*" };
+  const headers = { 
+    "Access-Control-Allow-Origin": "*",
+    "Content-Type": "application/json" 
+  };
+  
   const url = new URL(request.url);
-  const shop = url.searchParams.get("shop");
+  // Get the sessionId from the URL
   const sessionId = url.searchParams.get("sessionId");
 
-  const messages = await db.chatMessage.findMany({
-    where: { shop, sessionId },
-    orderBy: { createdAt: "asc" },
-  });
+  if (!sessionId) {
+    return json({ error: "Missing sessionId" }, { status: 400, headers });
+  }
 
-  return json(messages, { headers });
+  try {
+    const messages = await db.chatMessage.findMany({
+      where: { 
+        // Changed from 'sessionId' to 'chatSessionId' based on your Prisma error
+        chatSessionId: sessionId 
+        // Removed 'shop' because it doesn't exist on the ChatMessage model
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    return json(messages, { headers });
+  } catch (error) {
+    console.error("Prisma Error:", error);
+    return json({ error: "Internal Server Error" }, { status: 500, headers });
+  }
 };
