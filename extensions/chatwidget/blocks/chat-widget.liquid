@@ -240,32 +240,33 @@
 
   // Registration Logic
   document.getElementById("chat-submit-info").onclick = async () => {
-    const fname = document.getElementById("chat-fname").value.trim();
-    const email = document.getElementById("chat-email").value.trim();
-    if (!fname || !email) return alert("Please fill details");
+document.getElementById("chat-submit-info").onclick = async () => {
+  const fname = document.getElementById("chat-fname").value.trim();
+  const email = document.getElementById("chat-email").value.trim();
+  const sessionId = "sess_" + Date.now(); // Pehle ID generate karein
 
-    const sessionId = "sess_" + Date.now();
-    
-    try {
-      const response = await fetch(getUrl("app/chat/register"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shop, fname, email, sessionId })
-      });
+  try {
+    const res = await fetch(`${BASE_URL}/app/chat/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ shop, fname, email, sessionId })
+    });
 
-      if (response.ok) {
-        localStorage.setItem("chat_user_email", email);
-        localStorage.setItem("chat_session", sessionId);
-        onboardingStep.style.display = "none";
-        chatStep.style.display = "flex";
-        loadMessages();
-      }
-    } catch (err) {
-      console.error("Registration failed:", err);
-      alert("Connection error. Please try again.");
+    if (res.ok) {
+      // Jab database confirm karde tabhi localstorage mein save karein
+      localStorage.setItem("chat_session", sessionId);
+      localStorage.setItem("chat_user_email", email);
+      
+      onboardingStep.style.display = "none";
+      chatStep.style.display = "flex";
+      loadMessages();
+    } else {
+      alert("Registration failed. Please try again.");
     }
-  };
-
+  } catch (e) {
+    console.error("Registration Error", e);
+  }
+};
   // Message Sending Logic (FIXED)
 // handleSend function in your Shopify Section
 async function handleSend() {

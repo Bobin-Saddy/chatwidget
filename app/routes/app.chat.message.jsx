@@ -1,40 +1,42 @@
 import { json } from "@remix-run/node";
 import { db } from "../db.server";
 
-// Common Header helper
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
-  "Access-Control-Max-Age": "86400",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
 };
 
-export const loader = () => json({}, { headers: corsHeaders });
-
 export const action = async ({ request }) => {
-  // 1. Mandatory OPTIONS Handling
-  if (request.method === "OPTIONS" || request.method === "options") {
-    return new Response(null, { 
-      status: 204, 
-      headers: corsHeaders 
-    });
-  }
+  if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const body = await request.json();
-    const { sessionId, message } = body;
+    const { sessionId, message } = await request.json();
+
+    // Pehle check karein ki kya ye session exist karta hai?
+    const session = await db.chatSession.findUnique({
+      where: { sessionId: sessionId }
+    });
+
+    if (!session) {
+      console.error("Session not found in DB for ID:", sessionId);
+      return json({ error: "Session not found. Please register again." }, { status: 400, headers: corsHeaders });
+    }
 
     const newMessage = await db.chatMessage.create({
       data: { 
-        chatSessionId: sessionId,
-        sender: "user", 
-        message: message 
+        message: message,
+        sender: "user",
+        // Relation connect karne ka sahi tarika
+        chatSession: {
+          connect: { sessionId: sessionId }
+        }
       },
     });
 
     return json({ success: true, newMessage }, { headers: corsHeaders });
   } catch (error) {
-    console.error("Error:", error);
-    return json({ error: "Server Error" }, { status: 500, headers: corsHeaders });
+    console.error("Save Message Error:", error);
+    return json({ error: error.message }, { status: 500, headers: corsHeaders });
   }
 };
