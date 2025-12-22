@@ -1,48 +1,38 @@
 import { json } from "@remix-run/node";
 import { db } from "../db.server";
 
-// Common CORS Headers
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+  "Access-Control-Allow-Headers": "Content-Type",
 };
 
-// 1. Mandatory Loader (OPTIONS request isi ke through handle hoti hai)
-export const loader = () => {
-  return json({}, { headers: corsHeaders });
-};
+export const loader = () => json({}, { headers: corsHeaders });
 
-// 2. Action for POST request
 export const action = async ({ request }) => {
-  // Handle OPTIONS preflight explicitly in action if needed
-  if (request.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: corsHeaders });
-  }
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
 
   try {
     const { sessionId, message, shop, email } = await request.json();
 
-    if (!sessionId || !message) {
-      return json({ error: "Missing data" }, { status: 400, headers: corsHeaders });
-    }
-
-    // Upsert session to prevent P2025 errors
+    // 1. Session create ya update karein
     const session = await db.chatSession.upsert({
       where: { sessionId: sessionId },
-      update: {},
+      update: {}, 
       create: {
         sessionId: sessionId,
         shop: shop || "unknown",
         email: email || "guest@example.com",
-        firstName: "Guest"
+        firstName: "User"
       }
     });
 
+    // 2. Message ko create karein aur SESSION ID ko link karein
     const newMessage = await db.chatMessage.create({
       data: { 
         message: message,
         sender: "user",
+        chatSessionId: session.sessionId, // Direct ID assignment
         session: {
           connect: { sessionId: session.sessionId }
         }
@@ -51,7 +41,7 @@ export const action = async ({ request }) => {
 
     return json({ success: true, newMessage }, { headers: corsHeaders });
   } catch (error) {
-    console.error("Backend Error:", error);
+    console.error("Save Error:", error);
     return json({ error: error.message }, { status: 500, headers: corsHeaders });
   }
 };

@@ -2,32 +2,16 @@ import { json } from "@remix-run/node";
 import { db } from "../db.server";
 
 export const loader = async ({ request }) => {
-  const headers = { 
-    "Access-Control-Allow-Origin": "*",
-    "Content-Type": "application/json" 
-  };
-  
+  const headers = { "Access-Control-Allow-Origin": "*" };
   const url = new URL(request.url);
   const sessionId = url.searchParams.get("sessionId");
 
-  if (!sessionId) {
-    return json([], { headers }); // Return empty array instead of error
-  }
+  if (!sessionId) return json([], { headers });
 
-  try {
-    const messages = await db.chatMessage.findMany({
-      where: { 
-        // Ensure this matches the sessionId sent in POST
-        session: {
-          sessionId: sessionId
-        }
-      },
-      orderBy: { createdAt: "asc" },
-    });
+  const messages = await db.chatMessage.findMany({
+    where: { chatSessionId: sessionId }, // Match with exact ID
+    orderBy: { createdAt: "asc" },
+  });
 
-    return json(messages, { headers });
-  } catch (error) {
-    console.error("Fetch Messages Error:", error);
-    return json([], { status: 500, headers });
-  }
+  return json(messages, { headers });
 };
