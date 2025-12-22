@@ -274,27 +274,30 @@ async function handleSend() {
   
   if (!text || !sId) return;
 
-  // UI mein pehle dikhao (Optimistic UI)
+  // Immediate UI update (Optimistic)
   addMessageToUI({ sender: 'user', message: text });
   chatInput.value = "";
 
   try {
     const response = await fetch(`${BASE_URL}/app/chat/message`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      // mode: 'cors' use karein
+      mode: 'cors',
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
       body: JSON.stringify({ 
         sessionId: sId, 
         message: text 
       })
     });
     
-    // Agar 500 error aaye toh console mein error details dikhayega
     if (!response.ok) {
-       const errData = await response.json();
-       console.error("Backend Rejected:", errData);
+       console.log("Server rejected with status:", response.status);
     }
   } catch (e) {
-    console.error("Network Failed:", e);
+    console.error("Fetch block ho gaya (CORS/Network):", e);
   }
 }
 

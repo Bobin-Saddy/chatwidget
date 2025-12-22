@@ -1,47 +1,40 @@
-// app.chat.message.jsx
 import { json } from "@remix-run/node";
 import { db } from "../db.server";
 
-const headers = { 
+// Common Header helper
+const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+  "Access-Control-Max-Age": "86400",
 };
 
+export const loader = () => json({}, { headers: corsHeaders });
+
 export const action = async ({ request }) => {
-  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
+  // 1. Mandatory OPTIONS Handling
+  if (request.method === "OPTIONS" || request.method === "options") {
+    return new Response(null, { 
+      status: 204, 
+      headers: corsHeaders 
+    });
+  }
 
   try {
     const body = await request.json();
     const { sessionId, message } = body;
 
-    if (!sessionId || !message) {
-      return json({ error: "Data missing" }, { status: 400, headers });
-    }
-
-    // First: Check if session actually exists to avoid Foreign Key error
-    const sessionExists = await db.chatSession.findUnique({
-      where: { sessionId: sessionId }
-    });
-
-    if (!sessionExists) {
-      return json({ error: "Session not found. Please register again." }, { status: 404, headers });
-    }
-
-    // Second: Create message
     const newMessage = await db.chatMessage.create({
       data: { 
-        chatSession: {
-          connect: { sessionId: sessionId } // Use relation connection
-        },
+        chatSessionId: sessionId,
         sender: "user", 
         message: message 
       },
     });
 
-    return json({ success: true, newMessage }, { headers });
+    return json({ success: true, newMessage }, { headers: corsHeaders });
   } catch (error) {
-    console.error("Critical Save Error:", error);
-    return json({ error: "Database error", details: error.message }, { status: 500, headers });
+    console.error("Error:", error);
+    return json({ error: "Server Error" }, { status: 500, headers: corsHeaders });
   }
 };
