@@ -13,22 +13,17 @@ export const action = async ({ request }) => {
   try {
     const { sessionId, message } = await request.json();
 
-    // Pehle check karein ki kya ye session exist karta hai?
-    const session = await db.chatSession.findUnique({
-      where: { sessionId: sessionId }
-    });
-
-    if (!session) {
-      console.error("Session not found in DB for ID:", sessionId);
-      return json({ error: "Session not found. Please register again." }, { status: 400, headers: corsHeaders });
+    if (!sessionId || !message) {
+      return json({ error: "Missing sessionId or message" }, { status: 400, headers: corsHeaders });
     }
 
+    // Message create karein
     const newMessage = await db.chatMessage.create({
       data: { 
         message: message,
         sender: "user",
-        // Relation connect karne ka sahi tarika
-        chatSession: {
+        // Aapke schema mein relation name 'session' hai
+        session: {
           connect: { sessionId: sessionId }
         }
       },
@@ -36,7 +31,7 @@ export const action = async ({ request }) => {
 
     return json({ success: true, newMessage }, { headers: corsHeaders });
   } catch (error) {
-    console.error("Save Message Error:", error);
+    console.error("Prisma Save Error:", error);
     return json({ error: error.message }, { status: 500, headers: corsHeaders });
   }
 };
