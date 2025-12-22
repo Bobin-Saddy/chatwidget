@@ -11,27 +11,34 @@ export const action = async ({ request }) => {
   if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { sessionId, message } = await request.json();
+    const { sessionId, message, shop, email } = await request.json();
 
-    if (!sessionId || !message) {
-      return json({ error: "Missing data" }, { status: 400, headers: corsHeaders });
-    }
+    // Safety check: Agar session missing hai toh auto-create karein
+    // Isse P2025 error kabhi nahi aayegi
+    const session = await db.chatSession.upsert({
+      where: { sessionId: sessionId },
+      update: {}, // Agar mil jaye toh kuch mat karo
+      create: {
+        sessionId: sessionId,
+        shop: shop || "unknown",
+        email: email || "guest@example.com",
+        firstName: "Guest"
+      }
+    });
 
-    // Prisma creation according to your schema
     const newMessage = await db.chatMessage.create({
       data: { 
         message: message,
         sender: "user",
-        // RELATION NAME: Aapke schema mein 'session' likha hai
         session: {
-          connect: { sessionId: sessionId }
+          connect: { sessionId: session.sessionId }
         }
       },
     });
 
     return json({ success: true, newMessage }, { headers: corsHeaders });
   } catch (error) {
-    console.error("Final Prisma Error:", error);
-    return json({ error: "Database error", details: error.message }, { status: 500, headers: corsHeaders });
+    console.error("Critical Error:", error);
+    return json({ error: error.message }, { status: 500, headers: corsHeaders });
   }
 };

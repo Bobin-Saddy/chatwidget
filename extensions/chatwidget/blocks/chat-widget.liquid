@@ -271,6 +271,7 @@ document.getElementById("chat-submit-info").onclick = async () => {
 async function handleSend() {
   const text = chatInput.value.trim();
   const sId = localStorage.getItem("chat_session");
+  const email = localStorage.getItem("chat_user_email");
   
   if (!text || !sId) return;
 
@@ -278,19 +279,16 @@ async function handleSend() {
   chatInput.value = "";
 
   try {
-    const response = await fetch(`${BASE_URL}/app/chat/message`, {
+    await fetch(`${BASE_URL}/app/chat/message`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId: sId, message: text })
+      body: JSON.stringify({ 
+        sessionId: sId, 
+        message: text,
+        shop: shop,    // Ye line add karein
+        email: email   // Ye line add karein
+      })
     });
-    
-    // AGAR SESSION NA MILE (Error 400)
-    if (response.status === 400) {
-       console.warn("Session expired. Clearing storage...");
-       localStorage.removeItem("chat_session");
-       localStorage.removeItem("chat_user_email");
-       window.location.reload(); // Page reload karke user ko wapas onboarding dikhao
-    }
   } catch (e) {
     console.error("Network error:", e);
   }
