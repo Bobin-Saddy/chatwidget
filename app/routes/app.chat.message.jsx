@@ -1,23 +1,36 @@
 import { json } from "@remix-run/node";
 import { db } from "../db.server";
 
+// Common CORS Headers
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
 };
 
+// 1. Mandatory Loader (OPTIONS request isi ke through handle hoti hai)
+export const loader = () => {
+  return json({}, { headers: corsHeaders });
+};
+
+// 2. Action for POST request
 export const action = async ({ request }) => {
-  if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  // Handle OPTIONS preflight explicitly in action if needed
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
 
   try {
     const { sessionId, message, shop, email } = await request.json();
 
-    // Safety check: Agar session missing hai toh auto-create karein
-    // Isse P2025 error kabhi nahi aayegi
+    if (!sessionId || !message) {
+      return json({ error: "Missing data" }, { status: 400, headers: corsHeaders });
+    }
+
+    // Upsert session to prevent P2025 errors
     const session = await db.chatSession.upsert({
       where: { sessionId: sessionId },
-      update: {}, // Agar mil jaye toh kuch mat karo
+      update: {},
       create: {
         sessionId: sessionId,
         shop: shop || "unknown",
@@ -38,7 +51,7 @@ export const action = async ({ request }) => {
 
     return json({ success: true, newMessage }, { headers: corsHeaders });
   } catch (error) {
-    console.error("Critical Error:", error);
+    console.error("Backend Error:", error);
     return json({ error: error.message }, { status: 500, headers: corsHeaders });
   }
 };
