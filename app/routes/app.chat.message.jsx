@@ -15,10 +15,10 @@ export const action = async ({ request }) => {
   try {
     const { sessionId, message, shop, email } = await request.json();
 
-    // 1. Session create ya update karein
-    const session = await db.chatSession.upsert({
+    // 1. Session ko confirm karein (Upsert)
+    const chatSession = await db.chatSession.upsert({
       where: { sessionId: sessionId },
-      update: {}, 
+      update: {},
       create: {
         sessionId: sessionId,
         shop: shop || "unknown",
@@ -27,21 +27,21 @@ export const action = async ({ request }) => {
       }
     });
 
-    // 2. Message ko create karein aur SESSION ID ko link karein
+    // 2. Message save karein (Sirf session relation use karein)
     const newMessage = await db.chatMessage.create({
       data: { 
         message: message,
         sender: "user",
-        chatSessionId: session.sessionId, // Direct ID assignment
         session: {
-          connect: { sessionId: session.sessionId }
+          connect: { sessionId: chatSession.sessionId }
         }
+        // chatSessionId yahan nahi likhna hai, Prisma 'connect' se khud handle karega
       },
     });
 
     return json({ success: true, newMessage }, { headers: corsHeaders });
   } catch (error) {
     console.error("Save Error:", error);
-    return json({ error: error.message }, { status: 500, headers: corsHeaders });
+    return json({ error: "Database Validation Error", details: error.message }, { status: 500, headers: corsHeaders });
   }
 };
