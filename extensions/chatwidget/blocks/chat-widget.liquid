@@ -267,28 +267,34 @@
   };
 
   // Message Sending Logic (FIXED)
+// handleSend function in your Shopify Section
 async function handleSend() {
   const text = chatInput.value.trim();
   const sId = localStorage.getItem("chat_session");
+  
   if (!text || !sId) return;
 
-  // 1. UI mein turant message dikhao (Isse show na hone wali problem solve hogi)
+  // UI mein pehle dikhao (Optimistic UI)
   addMessageToUI({ sender: 'user', message: text });
   chatInput.value = "";
 
-  // 2. Server ko bhejien
   try {
     const response = await fetch(`${BASE_URL}/app/chat/message`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId: sId, message: text })
+      body: JSON.stringify({ 
+        sessionId: sId, 
+        message: text 
+      })
     });
     
+    // Agar 500 error aaye toh console mein error details dikhayega
     if (!response.ok) {
-       console.error("Server error while saving message");
+       const errData = await response.json();
+       console.error("Backend Rejected:", errData);
     }
   } catch (e) {
-    console.error("Fetch failed", e);
+    console.error("Network Failed:", e);
   }
 }
 
