@@ -3,22 +3,22 @@ import { useLoaderData, useFetcher } from "react-router";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { db } from "../db.server";
 
-// --- CUSTOM GLYPHS ---
+// --- NEURAL ICON SET ---
 const Icons = {
   Send: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
   ),
   Search: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
   ),
   User: ({ size = 20 }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-  ),
-  Note: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
   ),
   Globe: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+  ),
+  Clock: () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
   )
 };
 
@@ -30,14 +30,16 @@ export const loader = async () => {
   return json({ sessions });
 };
 
-export default function ChatAdmin() {
+export default function NeuralChatAdmin() {
   const { sessions } = useLoaderData();
   const [activeSession, setActiveSession] = useState(null);
   const [messages, setMessages] = useState([]);
   const [reply, setReply] = useState("");
-  const [accentColor, setAccentColor] = useState("#6366f1");
+  const [accentColor, setAccentColor] = useState("#8b5e3c"); 
   const [searchTerm, setSearchTerm] = useState("");
-  const [rightPanelTab, setRightPanelTab] = useState("info");
+  
+  // Dynamic Intelligence State
+  const [locationInfo, setLocationInfo] = useState({ city: "Detecting...", country: "", flag: "" });
 
   const fetcher = useFetcher();
   const scrollRef = useRef(null);
@@ -50,18 +52,26 @@ export default function ChatAdmin() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
 
-  useEffect(() => {
-    if (!activeSession) return;
-    const interval = setInterval(async () => {
-      const res = await fetch(`/app/chat/messages?sessionId=${activeSession.sessionId}`);
+  // AUTO-DYNAMIC LOCATION FETCH
+  const fetchLocation = async (ip = "") => {
+    setLocationInfo({ city: "Locating...", country: "", flag: "" });
+    try {
+      // Using a free IP API (ip-api.com is great for testing)
+      const res = await fetch(`https://ipapi.co/json/`);
       const data = await res.json();
-      if (data.length !== messages.length) setMessages(data);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [activeSession, messages.length]);
+      setLocationInfo({ 
+        city: data.city || "Unknown", 
+        country: data.country_name || "Region",
+        flag: `https://flagcdn.com/w20/${data.country_code.toLowerCase()}.png`
+      });
+    } catch (e) {
+      setLocationInfo({ city: "Offline", country: "Private IP", flag: "" });
+    }
+  };
 
   const loadChat = async (session) => {
     setActiveSession(session);
+    fetchLocation(); // Trigger dynamic location fetch on click
     const res = await fetch(`/app/chat/messages?sessionId=${session.sessionId}`);
     const data = await res.json();
     setMessages(data);
@@ -78,99 +88,74 @@ export default function ChatAdmin() {
 
   return (
     <div style={{ 
-      display: 'flex', height: '100vh', width: '100vw', 
-      backgroundColor: '#0f172a', // Deep midnight background
-      padding: '12px', boxSizing: 'border-box', gap: '12px',
-      fontFamily: '"Plus Jakarta Sans", "Inter", sans-serif' 
+      display: 'flex', height: '100vh', width: '100vw', backgroundColor: '#fdfaf5', 
+      padding: '20px', boxSizing: 'border-box', gap: '20px', color: '#433d3c', fontFamily: '"Plus Jakarta Sans", sans-serif'
     }}>
       
-      {/* 1. GLASS-LIST SIDEBAR */}
+      {/* 1. SIDEBAR: INBOX */}
       <div style={{ 
-        width: '360px', background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(12px)',
-        borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.1)',
-        display: 'flex', flexDirection: 'column', overflow: 'hidden'
+        width: '380px', background: '#fffcf9', borderRadius: '30px', border: '1px solid #f1ece4',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 10px 40px rgba(139, 94, 60, 0.05)'
       }}>
-        <div style={{ padding: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h1 style={{ color: 'white', fontSize: '22px', fontWeight: '800', margin: 0 }}>Inbox</h1>
-            <input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} style={{ border: 'none', background: 'none', width: '24px', height: '24px', cursor: 'pointer' }} />
-          </div>
+        <div style={{ padding: '30px 24px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '900', marginBottom: '20px' }}>Inquiries</h2>
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: '14px', top: '12px', color: '#94a3b8' }}><Icons.Search /></span>
+            <span style={{ position: 'absolute', left: '14px', top: '13px', color: '#c2b9af' }}><Icons.Search /></span>
             <input 
-              placeholder="Jump to conversation..." 
-              style={{ width: '100%', padding: '12px 12px 12px 42px', borderRadius: '14px', border: 'none', backgroundColor: 'rgba(255,255,255,0.05)', color: 'white', outline: 'none' }}
+              placeholder="Search user..." 
+              style={{ width: '100%', padding: '12px 12px 12px 42px', borderRadius: '15px', border: '1px solid #f1ece4', background: '#fdfaf5', outline: 'none' }}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px 12px' }}>
-          {filteredSessions.map(session => {
-            const isActive = activeSession?.sessionId === session.sessionId;
-            return (
-              <div 
-                key={session.sessionId} onClick={() => loadChat(session)}
-                style={{
-                  padding: '16px', borderRadius: '18px', cursor: 'pointer', marginBottom: '8px', transition: '0.2s',
-                  backgroundColor: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
-                  border: isActive ? `1px solid ${accentColor}` : '1px solid transparent'
-                }}
-              >
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                  <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: isActive ? accentColor : '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                    <Icons.User />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>{session.email.split('@')[0]}</span>
-                      <span style={{ color: '#64748b', fontSize: '11px' }}>2m ago</span>
-                    </div>
-                    <p style={{ color: '#94a3b8', fontSize: '12px', margin: '4px 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {session.messages[0]?.message || "No messages"}
-                    </p>
-                  </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0 15px 20px' }}>
+          {filteredSessions.map(session => (
+            <div key={session.sessionId} onClick={() => loadChat(session)}
+              style={{
+                padding: '20px', borderRadius: '22px', cursor: 'pointer', marginBottom: '10px', transition: '0.3s',
+                background: activeSession?.sessionId === session.sessionId ? '#fff1e6' : 'transparent',
+              }}>
+              <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                <div style={{ width: '45px', height: '45px', borderRadius: '50%', background: activeSession?.sessionId === session.sessionId ? accentColor : '#f1ece4', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeSession?.sessionId === session.sessionId ? 'white' : '#9d9489' }}>
+                  <Icons.User />
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 2. MAIN CHAT WORKSPACE */}
-      <div style={{ 
-        flex: 1, background: 'white', borderRadius: '32px', 
-        display: 'flex', flexDirection: 'column', overflow: 'hidden',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-      }}>
-        {activeSession ? (
-          <>
-            <div style={{ padding: '24px 32px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div style={{ position: 'relative' }}>
-                   <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icons.User size={24} /></div>
-                   <div style={{ position: 'absolute', bottom: -2, right: -2, width: '12px', height: '12px', borderRadius: '50%', background: '#22c55e', border: '3px solid white' }}></div>
-                </div>
-                <div>
-                  <h2 style={{ fontSize: '18px', fontWeight: '800', margin: 0 }}>{activeSession.email}</h2>
-                  <span style={{ fontSize: '12px', color: '#64748b' }}>Active on Chrome • New York</span>
+                <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: '800', fontSize: '15px' }}>{session.email.split('@')[0]}</div>
+                    <div style={{ fontSize: '12px', color: '#a8a29e' }}>{session.messages[0]?.message.slice(0, 30)}...</div>
                 </div>
               </div>
             </div>
+          ))}
+        </div>
+      </div>
 
-            <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '32px', background: '#fafafa', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {/* 2. CHAT WORKSPACE */}
+      <div style={{ 
+        flex: 1, background: '#ffffff', borderRadius: '35px', border: '1px solid #f1ece4',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.03)'
+      }}>
+        {activeSession ? (
+          <>
+            <div style={{ padding: '25px 40px', borderBottom: '1px solid #fdfaf5', display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#d4a373', boxShadow: '0 0 10px #d4a373' }}></div>
+                    <h3 style={{ margin: 0, fontWeight: '900' }}>{activeSession.email}</h3>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#a8a29e', fontSize: '12px', fontWeight: '700' }}>
+                    <Icons.Globe /> {locationInfo.city}, {locationInfo.country}
+                </div>
+            </div>
+
+            <div ref={scrollRef} style={{ flex: 1, padding: '40px', overflowY: 'auto', background: '#fffcf9', display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {messages.map((msg, i) => (
-                <div key={i} style={{ 
-                  alignSelf: msg.sender === 'admin' ? 'flex-end' : 'flex-start', 
-                  maxWidth: '70%',
-                  animation: 'slideUp 0.3s ease-out' 
-                }}>
+                <div key={i} style={{ alignSelf: msg.sender === 'admin' ? 'flex-end' : 'flex-start', maxWidth: '70%' }}>
                   <div style={{ 
-                    padding: '14px 20px', borderRadius: msg.sender === 'admin' ? '22px 22px 4px 22px' : '4px 22px 22px 22px',
-                    backgroundColor: msg.sender === 'admin' ? accentColor : 'white',
-                    color: msg.sender === 'admin' ? 'white' : '#1e293b',
-                    boxShadow: msg.sender === 'admin' ? `0 10px 15px -3px ${accentColor}40` : '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
-                    fontSize: '14px', lineHeight: '1.6'
+                    padding: '16px 24px', borderRadius: '25px', fontSize: '15px', lineHeight: '1.6',
+                    background: msg.sender === 'admin' ? accentColor : 'white',
+                    color: msg.sender === 'admin' ? 'white' : '#433d3c',
+                    boxShadow: msg.sender === 'admin' ? `0 10px 20px ${accentColor}30` : '0 4px 15px rgba(0,0,0,0.03)',
+                    border: msg.sender === 'admin' ? 'none' : '1px solid #f1ece4'
                   }}>
                     {msg.message}
                   </div>
@@ -178,91 +163,60 @@ export default function ChatAdmin() {
               ))}
             </div>
 
-            {/* FLOATING ACTION INPUT */}
-            <div style={{ padding: '24px 32px', background: 'white' }}>
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-                {['👋 Hey there!', 'Let me check...', 'All set! ✅'].map(chip => (
-                  <button key={chip} onClick={() => handleReply(chip)} style={{ padding: '8px 16px', borderRadius: '12px', border: '1px solid #f1f5f9', background: 'white', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: '0.2s' }}>{chip}</button>
+            <div style={{ padding: '30px 40px', background: 'white' }}>
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                {['Resolution Update', 'Send Invoice', 'Wait 5 min'].map(t => (
+                  <button key={t} onClick={() => handleReply(t)} style={{ padding: '8px 18px', borderRadius: '100px', border: '1px solid #f1ece4', background: '#fffcf9', fontSize: '11px', fontWeight: '800', color: '#78716c', cursor: 'pointer' }}>{t}</button>
                 ))}
               </div>
-              <div style={{ 
-                display: 'flex', alignItems: 'center', background: '#f8fafc', 
-                borderRadius: '20px', padding: '8px 8px 8px 20px', border: '1px solid #e2e8f0' 
-              }}>
+              <div style={{ display: 'flex', alignItems: 'center', background: '#fdfaf5', borderRadius: '100px', padding: '10px 10px 10px 25px', border: '1px solid #f1ece4' }}>
                 <input 
-                  placeholder="Reply to customer..." 
+                  placeholder="Neural reply..." 
                   style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', fontSize: '15px' }}
                   value={reply} onChange={(e) => setReply(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleReply()}
                 />
-                <button 
-                  onClick={() => handleReply()}
-                  style={{ width: '44px', height: '44px', borderRadius: '14px', backgroundColor: accentColor, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >
+                <button onClick={() => handleReply()} style={{ width: '50px', height: '50px', borderRadius: '50%', background: accentColor, border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Icons.Send />
                 </button>
               </div>
             </div>
           </>
         ) : (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1', marginBottom: '16px' }}><Icons.User size={40} /></div>
-            <h3 style={{ margin: 0, color: '#1e293b' }}>Select a conversation</h3>
-            <p style={{ color: '#94a3b8', fontSize: '14px' }}>Pick a user from the sidebar to start.</p>
-          </div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c2b9af' }}><Icons.User size={80} /></div>
         )}
       </div>
 
-      {/* 3. DETAILS INFOGRAPHIC PANEL */}
+      {/* 3. INTELLIGENCE PANEL */}
       <div style={{ 
-        width: '320px', background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(12px)',
-        borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '24px',
-        display: 'flex', flexDirection: 'column'
+        width: '320px', background: '#fffcf9', borderRadius: '30px', border: '1px solid #f1ece4',
+        padding: '30px', display: 'flex', flexDirection: 'column', gap: '25px'
       }}>
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '12px' }}>
-          <button onClick={() => setRightPanelTab('info')} style={{ flex: 1, padding: '8px', borderRadius: '10px', border: 'none', background: rightPanelTab === 'info' ? 'white' : 'transparent', color: rightPanelTab === 'info' ? '#0f172a' : 'white', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>INFO</button>
-          <button onClick={() => setRightPanelTab('notes')} style={{ flex: 1, padding: '8px', borderRadius: '10px', border: 'none', background: rightPanelTab === 'notes' ? 'white' : 'transparent', color: rightPanelTab === 'notes' ? '#0f172a' : 'white', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>NOTES</button>
-        </div>
+         <h4 style={{ fontSize: '12px', fontWeight: '900', color: '#c2b9af', textTransform: 'uppercase', letterSpacing: '1px' }}>System Insights</h4>
+         {activeSession ? (
+             <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+                <div style={{ padding: '20px', background: '#ffffff', borderRadius: '20px', border: '1px solid #f1ece4' }}>
+                    <div style={{ fontSize: '11px', color: '#a8a29e', marginBottom: '8px' }}>DYNAMIC LOCATION</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '800' }}>
+                        {locationInfo.flag && <img src={locationInfo.flag} alt="flag" style={{ width: '18px' }} />}
+                        {locationInfo.city}, {locationInfo.country}
+                    </div>
+                </div>
 
-        {activeSession ? (
-          <div style={{ color: 'white' }}>
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: accentColor, margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
-                {activeSession.email[0].toUpperCase()}
-              </div>
-              <h3 style={{ margin: 0 }}>{activeSession.email}</h3>
-            </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <div style={{ color: accentColor }}><Icons.Globe /></div>
-                <div>
-                  <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase' }}>Location</div>
-                  <div style={{ fontSize: '13px' }}>New York, United States</div>
+                <div style={{ padding: '20px', background: '#ffffff', borderRadius: '20px', border: '1px solid #f1ece4' }}>
+                    <div style={{ fontSize: '11px', color: '#a8a29e', marginBottom: '8px' }}>LOCAL USER TIME</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '800' }}>
+                        <Icons.Clock /> {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
                 </div>
-              </div>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <div style={{ color: accentColor }}><Icons.Note /></div>
-                <div>
-                  <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase' }}>Last Seen</div>
-                  <div style={{ fontSize: '13px' }}>Today, 12:45 PM</div>
+
+                <div style={{ padding: '20px', background: '#fff1e6', borderRadius: '20px', border: `1px solid ${accentColor}20` }}>
+                    <div style={{ fontSize: '11px', color: accentColor, fontWeight: '900', marginBottom: '5px' }}>AI SUMMARY</div>
+                    <div style={{ fontSize: '13px', lineHeight: '1.4', color: '#8b5e3c' }}>User is asking about billing. They are located in {locationInfo.city} and have been active for 2 minutes.</div>
                 </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div style={{ color: '#475569', fontSize: '13px', textAlign: 'center', marginTop: '40px' }}>No session selected</div>
-        )}
+             </div>
+         ) : <div style={{ color: '#c2b9af', fontSize: '13px' }}>Waiting for session...</div>}
       </div>
-
-      <style>{`
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-      `}</style>
     </div>
   );
 }
