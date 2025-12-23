@@ -128,7 +128,7 @@ export default function NeuralChatAdmin() {
       {/* 1. SIDEBAR */}
       <div style={{ 
         width: '380px',  borderRadius: '0', borderRight: '1px solid #ccc',
-        display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 10px 40px rgba(139, 94, 60, 0.05)'
+        display: 'flex', flexDirection: 'column', overflow: 'hidden'
       }}>
         <div style={{ padding: '30px 24px', borderBottom: '1px solid #fdfaf5' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8b5e3c', marginBottom: '12px' }}>
@@ -174,7 +174,7 @@ export default function NeuralChatAdmin() {
 
       {/* 2. MAIN CHAT AREA */}
       <div style={{ 
-        flex: 1, background: '#ffffff', borderRadius: '0', borderRight: '1px solid #ccc',
+        flex: 1,  borderRadius: '0', borderRight: '1px solid #ccc',
         display: 'flex', flexDirection: 'column', overflow: 'hidden' 
       }}>
         {activeSession ? (
