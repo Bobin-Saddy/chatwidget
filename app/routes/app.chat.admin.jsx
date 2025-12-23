@@ -184,9 +184,9 @@ export default function NeuralChatAdmin() {
                     <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#d4a373', boxShadow: '0 0 10px #d4a373' }}></div>
                     <h3 style={{ margin: 0, fontWeight: '900', fontSize: '18px' }}>{activeSession.email}</h3>
                 </div>
-                <div style={{ fontSize: '11px', fontWeight: '800', color: '#8b5e3c', background: '#fff1e6', padding: '6px 14px', borderRadius: '12px' }}>
+                {/* <div style={{ fontSize: '11px', fontWeight: '800', color: '#8b5e3c', background: '#fff1e6', padding: '6px 14px', borderRadius: '12px' }}>
                    CONNECTED VIA STOREFRONT
-                </div>
+                </div> */}
             </div>
 
             <div ref={scrollRef} style={{ flex: 1, padding: '40px', overflowY: 'auto', background: '#fffcf9', display: 'flex', flexDirection: 'column', gap: '20px' }}>
