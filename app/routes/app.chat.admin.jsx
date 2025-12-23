@@ -3,16 +3,19 @@ import { useLoaderData, useFetcher } from "react-router";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { db } from "../db.server";
 
-// --- CUSTOM SVG ICONS ---
+// --- CHATRA STYLE SVG ICONS ---
 const Icons = {
-  Send: ({ color = "currentColor" }) => (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+  Send: ({ color = "white" }) => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
   ),
   Search: () => (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
   ),
   User: () => (
-    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+  ),
+  Settings: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
   )
 };
 
@@ -30,190 +33,186 @@ export default function ChatAdmin() {
   const [messages, setMessages] = useState([]);
   const [reply, setReply] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [accentColor, setAccentColor] = useState("#6366f1"); // Indigo modern default
+  const [accentColor, setAccentColor] = useState("#2353ff"); 
 
   const fetcher = useFetcher();
   const scrollRef = useRef(null);
 
+  // Filtered session list
   const filteredSessions = useMemo(() => {
     return sessions.filter(s => s.email?.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [sessions, searchTerm]);
 
+  // Auto-scroll logic
+  const scrollToBottom = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => { scrollToBottom(); }, [messages]);
+
+  // Polling to get new customer messages
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [messages]);
+    if (!activeSession) return;
+    const interval = setInterval(async () => {
+      const res = await fetch(`/app/chat/messages?sessionId=${activeSession.sessionId}`);
+      const data = await res.json();
+      if (data.length !== messages.length) {
+        setMessages(data);
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [activeSession, messages.length]);
 
   const loadChat = async (session) => {
+    setActiveSession(session);
     const res = await fetch(`/app/chat/messages?sessionId=${session.sessionId}`);
     const data = await res.json();
     setMessages(data);
-    setActiveSession(session);
   };
 
-  const handleReply = (customMsg = null) => {
-    const text = customMsg || reply;
-    if (!text.trim()) return;
-    const data = { sessionId: activeSession.sessionId, message: text, sender: "admin" };
-    fetcher.submit(JSON.stringify(data), { method: "post", action: "/app/chat/message", encType: "application/json" });
-    setMessages((prev) => [...prev, { ...data, createdAt: new Date().toISOString() }]);
-    if (!customMsg) setReply("");
+  const handleReply = (msgText = null) => {
+    const finalMsg = msgText || reply;
+    if (!finalMsg.trim() || !activeSession) return;
+
+    const newMessage = {
+      message: finalMsg,
+      sender: "admin",
+      createdAt: new Date().toISOString(),
+      sessionId: activeSession.sessionId
+    };
+
+    // INSTANT UPDATE (No Refresh Needed)
+    setMessages(prev => [...prev, newMessage]);
+    setReply("");
+
+    fetcher.submit(JSON.stringify(newMessage), {
+      method: "post",
+      action: "/app/chat/message",
+      encType: "application/json"
+    });
   };
 
   return (
-    <div style={{ 
-      fontFamily: "'Inter', sans-serif", 
-      backgroundColor: "#f8fafc", 
-      height: "100vh", 
-      display: "flex", 
-      flexDirection: "column" 
-    }}>
-      {/* HEADER */}
-      <header style={{ 
-        height: "64px", 
-        backgroundColor: "#fff", 
-        borderBottom: "1px solid #e2e8f0", 
-        display: "flex", 
-        alignItems: "center", 
-        justifyContent: "space-between", 
-        padding: "0 24px" 
-      }}>
-        <h1 style={{ fontSize: "1.25rem", fontWeight: "700", color: "#1e293b" }}>Support Center</h1>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <span style={{ fontSize: "0.875rem", color: "#64748b" }}>Theme Color</span>
-          <input 
-            type="color" 
-            value={accentColor} 
-            onChange={(e) => setAccentColor(e.target.value)}
-            style={{ border: "none", cursor: "pointer", width: "32px", height: "32px", borderRadius: "8px", background: "none" }}
-          />
-        </div>
-      </header>
-
-      <main style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        {/* SIDEBAR */}
-        <aside style={{ 
-          width: "350px", 
-          backgroundColor: "#fff", 
-          borderRight: "1px solid #e2e8f0", 
-          display: "flex", 
-          flexDirection: "column" 
-        }}>
-          <div style={{ padding: "20px" }}>
-            <div style={{ position: "relative" }}>
-              <div style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)" }}><Icons.Search /></div>
-              <input 
-                type="text" 
-                placeholder="Search conversations..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ 
-                  width: "100%", padding: "12px 12px 12px 40px", borderRadius: "10px", 
-                  border: "1px solid #e2e8f0", outline: "none", fontSize: "0.9rem" 
-                }}
-              />
-            </div>
+    <div style={{ display: 'flex', height: '100vh', backgroundColor: '#f0f2f5', fontFamily: 'Segoe UI, Roboto, Helvetica, Arial, sans-serif' }}>
+      
+      {/* SIDEBAR: CHAT LIST */}
+      <div style={{ width: '360px', backgroundColor: 'white', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '24px 20px', borderBottom: '1px solid #f3f4f6' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#111827', margin: 0 }}>Messages</h2>
+            <button style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#6b7280' }}><Icons.Settings /></button>
           </div>
+          <div style={{ position: 'relative' }}>
+            <span style={{ position: 'absolute', left: '12px', top: '10px' }}><Icons.Search /></span>
+            <input 
+              type="text" 
+              placeholder="Search conversations..." 
+              style={{ width: '100%', padding: '10px 10px 10px 40px', borderRadius: '12px', border: '1px solid #e5e7eb', backgroundColor: '#f9fafb', fontSize: '14px', outline: 'none' }}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
 
-          <div style={{ flex: 1, overflowY: "auto" }}>
-            {filteredSessions.map((item) => {
-              const isActive = activeSession?.sessionId === item.sessionId;
-              return (
-                <div 
-                  key={item.sessionId}
-                  onClick={() => loadChat(item)}
-                  style={{
-                    padding: "16px 20px", cursor: "pointer", borderLeft: `4px solid ${isActive ? accentColor : "transparent"}`,
-                    backgroundColor: isActive ? `${accentColor}10` : "transparent", transition: "0.2s"
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                    <span style={{ fontWeight: "600", fontSize: "0.95rem" }}>{item.email || "Guest"}</span>
-                    <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{new Date().toLocaleDateString()}</span>
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          {filteredSessions.map((session) => {
+            const isActive = activeSession?.sessionId === session.sessionId;
+            return (
+              <div 
+                key={session.sessionId}
+                onClick={() => loadChat(session)}
+                style={{
+                  padding: '16px 20px', cursor: 'pointer', transition: '0.2s',
+                  backgroundColor: isActive ? `${accentColor}10` : 'transparent',
+                  borderLeft: `4px solid ${isActive ? accentColor : 'transparent'}`,
+                  display: 'flex', gap: '12px'
+                }}
+              >
+                <div style={{ width: '44px', height: '44px', borderRadius: '50%', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icons.User />
+                </div>
+                <div style={{ flex: 1, overflow: 'hidden' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ fontWeight: '600', fontSize: '14px', color: '#111827' }}>{session.email || "Guest User"}</span>
+                    <span style={{ fontSize: '11px', color: '#9ca3af' }}>12:45 PM</span>
                   </div>
-                  <p style={{ fontSize: "0.85rem", color: "#64748b", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {item.messages[0]?.message || "No messages yet"}
+                  <p style={{ fontSize: '13px', color: '#6b7280', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {session.messages[0]?.message || "No messages yet"}
                   </p>
                 </div>
-              );
-            })}
-          </div>
-        </aside>
-
-        {/* CHAT AREA */}
-        <section style={{ flex: 1, display: "flex", flexDirection: "column", backgroundColor: "#fff" }}>
-          {activeSession ? (
-            <>
-              {/* Chat Header */}
-              <div style={{ padding: "16px 24px", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "12px" }}>
-                <div style={{ background: `${accentColor}20`, color: accentColor, padding: "8px", borderRadius: "50%" }}><Icons.User /></div>
-                <div>
-                  <div style={{ fontWeight: "600" }}>{activeSession.email}</div>
-                  <div style={{ fontSize: "0.75rem", color: "#22c55e" }}>● Active Now</div>
-                </div>
               </div>
+            );
+          })}
+        </div>
+      </div>
 
-              {/* Message List */}
-              <div ref={scrollRef} style={{ 
-                flex: 1, overflowY: "auto", padding: "24px", display: "flex", 
-                flexDirection: "column", gap: "16px", backgroundColor: "#f8fafc" 
-              }}>
-                {messages.map((msg, i) => (
-                  <div key={i} style={{ alignSelf: msg.sender === 'admin' ? 'flex-end' : 'flex-start', maxWidth: '70%' }}>
-                    <div style={{ 
-                      background: msg.sender === 'admin' ? accentColor : '#fff',
-                      color: msg.sender === 'admin' ? '#fff' : '#1e293b',
-                      padding: '12px 16px', borderRadius: msg.sender === 'admin' ? '18px 18px 0 18px' : '0 18px 18px 18px',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '0.9rem', lineHeight: '1.5'
-                    }}>
-                      {msg.message}
-                    </div>
-                    <div style={{ fontSize: "0.7rem", color: "#94a3b8", marginTop: "6px", textAlign: msg.sender === 'admin' ? 'right' : 'left' }}>
-                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
+      {/* MAIN CHAT WINDOW */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'white' }}>
+        {activeSession ? (
+          <>
+            <div style={{ padding: '16px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#22c55e' }}></div>
+                <span style={{ fontWeight: '700', fontSize: '16px' }}>{activeSession.email}</span>
+              </div>
+              <input 
+                type="color" 
+                value={accentColor} 
+                onChange={(e) => setAccentColor(e.target.value)}
+                style={{ border: 'none', background: 'none', width: '30px', height: '30px', cursor: 'pointer' }}
+              />
+            </div>
+
+            <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '30px', display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: '#fcfdfe' }}>
+              {messages.map((msg, i) => (
+                <div key={i} style={{ alignSelf: msg.sender === 'admin' ? 'flex-end' : 'flex-start', maxWidth: '65%' }}>
+                  <div style={{ 
+                    padding: '12px 18px', borderRadius: msg.sender === 'admin' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
+                    backgroundColor: msg.sender === 'admin' ? accentColor : '#f3f4f6',
+                    color: msg.sender === 'admin' ? 'white' : '#1f2937',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.03)', fontSize: '14.5px', lineHeight: '1.5'
+                  }}>
+                    {msg.message}
                   </div>
+                  <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '5px', textAlign: msg.sender === 'admin' ? 'right' : 'left' }}>
+                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ padding: '20px 24px', backgroundColor: 'white' }}>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '15px' }}>
+                {['How can I help?', 'Just a moment...', 'All resolved!'].map(tag => (
+                  <button key={tag} onClick={() => handleReply(tag)} style={{ padding: '6px 14px', borderRadius: '18px', border: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '12px', color: '#4b5563', cursor: 'pointer' }}>{tag}</button>
                 ))}
               </div>
-
-              {/* Chat Footer */}
-              <div style={{ padding: "20px 24px", borderTop: "1px solid #e2e8f0" }}>
-                <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
-                  {['👋 Hi!', 'Working on it', 'Solved!'].map(q => (
-                    <button key={q} onClick={() => handleReply(q)} style={{ 
-                      padding: "6px 14px", borderRadius: "20px", border: "1px solid #e2e8f0", 
-                      backgroundColor: "#fff", fontSize: "0.75rem", cursor: "pointer", color: "#475569" 
-                    }}>{q}</button>
-                  ))}
-                </div>
-                <div style={{ display: "flex", gap: "12px" }}>
-                  <input 
-                    value={reply} 
-                    onChange={(v) => setReply(v.target.value)} 
-                    placeholder="Type your reply..." 
-                    onKeyPress={(e) => e.key === 'Enter' && handleReply()}
-                    style={{ flex: 1, padding: "12px 16px", borderRadius: "12px", border: "1px solid #e2e8f0", outline: "none" }}
-                  />
-                  <button 
-                    onClick={() => handleReply()}
-                    style={{ 
-                      backgroundColor: accentColor, color: "#fff", border: "none", 
-                      padding: "0 20px", borderRadius: "12px", cursor: "pointer", display: "flex", alignItems: "center" 
-                    }}
-                  >
-                    <Icons.Send color="white" />
-                  </button>
-                </div>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', backgroundColor: '#f9fafb', padding: '6px', borderRadius: '16px', border: '1px solid #e5e7eb' }}>
+                <input 
+                  placeholder="Write a message..." 
+                  style={{ flex: 1, border: 'none', backgroundColor: 'transparent', padding: '10px 15px', outline: 'none', fontSize: '15px' }}
+                  value={reply}
+                  onChange={(e) => setReply(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleReply()}
+                />
+                <button 
+                  onClick={() => handleReply()}
+                  style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: accentColor, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s' }}
+                >
+                  <Icons.Send />
+                </button>
               </div>
-            </>
-          ) : (
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#94a3b8" }}>
-              <div style={{ background: "#f1f5f9", padding: "20px", borderRadius: "50%", marginBottom: "16px" }}>
-                <Icons.User />
-              </div>
-              <p style={{ fontWeight: "500" }}>Select a conversation to start</p>
             </div>
-          )}
-        </section>
-      </main>
+          </>
+        ) : (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
+            <div style={{ marginBottom: '20px', padding: '20px', borderRadius: '50%', backgroundColor: '#f3f4f6' }}><Icons.User /></div>
+            <p style={{ fontSize: '16px', fontWeight: '500' }}>Select a conversation to start chatting</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
