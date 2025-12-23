@@ -239,7 +239,7 @@ export default function NeuralChatAdmin() {
       {/* 3. INTELLIGENCE PANEL */}
       <div style={{ 
         width: '320px',  borderRadius: '0', border: '0',
-        padding: '30px', display: 'flex', flexDirection: 'column', gap: '25px' , paddingTop: '20px'
+        padding: '30px 20px', display: 'flex', flexDirection: 'column', gap: '25px' , paddingTop: '20px'
       }}>
          <h4 style={{ fontSize: '11px', fontWeight: '900', color: '#c2b9af', textTransform: 'uppercase', letterSpacing: '1.5px' }}>System Logic</h4>
          {activeSession ? (
