@@ -127,7 +127,7 @@ export default function NeuralChatAdmin() {
       
       {/* 1. SIDEBAR */}
       <div style={{ 
-        width: '380px', background: '#fffcf9', borderRadius: '0', borderRight: '1px solid #ccc',
+        width: '380px',  borderRadius: '0', borderRight: '1px solid #ccc',
         display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 10px 40px rgba(139, 94, 60, 0.05)'
       }}>
         <div style={{ padding: '30px 24px', borderBottom: '1px solid #fdfaf5' }}>
@@ -209,7 +209,7 @@ export default function NeuralChatAdmin() {
             <div style={{ padding: '30px 40px', background: 'white', borderTop: '1px solid  rgb(253, 250, 245)' }}>
               <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
                 {['Happy to help!', 'Checking your order', 'Can you share your email?'].map(t => (
-                  <button key={t} onClick={() => handleReply(t)} style={{ padding: '8px 16px', borderRadius: '100px', border: '1px solid #f1ece4', background: '#fffcf9', fontSize: '11px', fontWeight: '800', color: '#78716c', cursor: 'pointer', transition: '0.2s' }}>{t}</button>
+                  <button key={t} onClick={() => handleReply(t)} style={{ padding: '8px 16px', borderRadius: '100px', border: '1px solid #f1ece4', fontSize: '11px', fontWeight: '800', color: '#78716c', cursor: 'pointer', transition: '0.2s' }}>{t}</button>
                 ))}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', background: '#fdfaf5', borderRadius: '100px', padding: '10px 10px 10px 25px', border: '1px solid #f1ece4' }}>
@@ -238,7 +238,7 @@ export default function NeuralChatAdmin() {
 
       {/* 3. INTELLIGENCE PANEL */}
       <div style={{ 
-        width: '320px', background: '#fffcf9', borderRadius: '0', border: '0',
+        width: '320px',  borderRadius: '0', border: '0',
         padding: '30px', display: 'flex', flexDirection: 'column', gap: '25px' , paddingTop: '20px'
       }}>
          <h4 style={{ fontSize: '11px', fontWeight: '900', color: '#c2b9af', textTransform: 'uppercase', letterSpacing: '1.5px' }}>System Logic</h4>
