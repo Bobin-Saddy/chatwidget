@@ -175,7 +175,7 @@ export default function NeuralChatAdmin() {
       {/* 2. MAIN CHAT AREA */}
       <div style={{ 
         flex: 1, background: '#ffffff', borderRadius: '0', borderRight: '1px solid #ccc',
-        display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.03)'
+        display: 'flex', flexDirection: 'column', overflow: 'hidden' 
       }}>
         {activeSession ? (
           <>
@@ -189,7 +189,7 @@ export default function NeuralChatAdmin() {
                 </div> */}
             </div>
 
-            <div ref={scrollRef} style={{ flex: '110%', padding: '40px', overflowY: 'auto', background: 'rgb(255, 252, 249)', display: 'flex', flexDirection: 'column', gap: '20px' , width: '75%' }}>
+            <div ref={scrollRef} style={{ flex: '110%', padding: '40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' , width: '75%' }}>
               {messages.map((msg, i) => (
                 <div key={i} style={{ alignSelf: msg.sender === 'admin' ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
                   <div style={{ 
@@ -206,7 +206,7 @@ export default function NeuralChatAdmin() {
               ))}
             </div>
 
-            <div style={{ padding: '30px 40px', background: 'white', borderTop: '1px solid  rgb(253, 250, 245)' }}>
+            <div style={{ padding: '30px 40px',  borderTop: '1px solid  rgb(253, 250, 245)' }}>
               <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
                 {['Happy to help!', 'Checking your order', 'Can you share your email?'].map(t => (
                   <button key={t} onClick={() => handleReply(t)} style={{ padding: '8px 16px', borderRadius: '100px', border: '1px solid #f1ece4', fontSize: '11px', fontWeight: '800', color: '#78716c', cursor: 'pointer', transition: '0.2s' }}>{t}</button>
