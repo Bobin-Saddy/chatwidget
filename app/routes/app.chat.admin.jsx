@@ -2,7 +2,7 @@ import { json } from "@remix-run/node";
 import { useLoaderData, useFetcher } from "react-router";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { db } from "../db.server";
-import { authenticate } from "../shopify.server"; // Crucial for fixing the 'shop' null error
+import { authenticate } from "../shopify.server";
 
 // --- ARTISAN ICON SET ---
 const Icons = {
@@ -27,16 +27,13 @@ const Icons = {
 };
 
 export const loader = async ({ request }) => {
-  // Fix: Use Shopify Auth to get the shop domain securely
   const { session } = await authenticate.admin(request);
   const shop = session.shop;
 
-  if (!shop) {
-    throw new Response("Unauthorized: Shop not found", { status: 401 });
-  }
+  if (!shop) throw new Response("Unauthorized", { status: 401 });
 
   const sessions = await db.chatSession.findMany({
-    where: { shop: shop }, // Filter by store
+    where: { shop: shop },
     include: { messages: { orderBy: { createdAt: "desc" }, take: 1 } },
     orderBy: { createdAt: "desc" }
   });
@@ -52,9 +49,19 @@ export default function NeuralChatAdmin() {
   const [accentColor] = useState("#8b5e3c"); 
   const [searchTerm, setSearchTerm] = useState("");
   const [locationInfo, setLocationInfo] = useState({ city: "Detecting...", country: "", flag: "" });
+  
+  // NEW: Ref to track message count for notifications
+  const lastMessageCountRef = useRef({});
 
   const fetcher = useFetcher();
   const scrollRef = useRef(null);
+
+  // Request Notification Permissions on mount
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
 
   const filteredSessions = useMemo(() => {
     return sessions.filter(s => s.email?.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -64,16 +71,47 @@ export default function NeuralChatAdmin() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
 
-  // Polling for new messages
+  // Polling logic with Notification triggers
   useEffect(() => {
-    if (!activeSession) return;
     const interval = setInterval(async () => {
-      const res = await fetch(`/app/chat/messages?sessionId=${activeSession.sessionId}`);
-      const data = await res.json();
-      if (data.length !== messages.length) setMessages(data);
-    }, 4000);
+      // 1. Fetch latest sessions to check for new messages across all chats
+      const sessionRes = await fetch(`/app/chat/sessions?shop=${currentShop}`);
+      const latestSessions = await sessionRes.json();
+
+      latestSessions.forEach(session => {
+        const lastMsg = session.messages[0];
+        if (!lastMsg) return;
+
+        // If the last message is from user and we haven't notified for this specific message ID yet
+        const sessionKey = `last_msg_${session.sessionId}`;
+        if (lastMsg.sender === "user" && localStorage.getItem(sessionKey) !== lastMsg.id) {
+          
+          // Trigger Notification
+          if (Notification.permission === "granted") {
+            new Notification(`New message from ${session.email}`, {
+              body: lastMsg.message,
+              icon: "/favicon.ico"
+            });
+          }
+          
+          // Play a subtle sound (Optional)
+          const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3");
+          audio.play().catch(() => {}); // catch block handles browser blocking auto-play
+
+          localStorage.setItem(sessionKey, lastMsg.id);
+        }
+      });
+
+      // 2. Update active chat messages if a session is open
+      if (activeSession) {
+        const res = await fetch(`/app/chat/messages?sessionId=${activeSession.sessionId}`);
+        const data = await res.json();
+        if (data.length !== messages.length) setMessages(data);
+      }
+    }, 5000);
+
     return () => clearInterval(interval);
-  }, [activeSession, messages.length]);
+  }, [activeSession, messages.length, currentShop]);
 
   const fetchLocation = async () => {
     setLocationInfo({ city: "Locating...", country: "", flag: "" });
@@ -96,6 +134,10 @@ export default function NeuralChatAdmin() {
     const res = await fetch(`/app/chat/messages?sessionId=${session.sessionId}`);
     const data = await res.json();
     setMessages(data);
+    // Mark as read locally
+    if (data.length > 0) {
+      localStorage.setItem(`last_msg_${session.sessionId}`, data[data.length - 1].id);
+    }
   };
 
   const handleReply = (text = null) => {
@@ -121,7 +163,7 @@ export default function NeuralChatAdmin() {
 
   return (
     <div style={{ 
-      display: 'flex', height: '100vh', width: '100vw', backgroundColor: '#fdfaf5', margin: '20px' ,
+      display: 'flex', height: '100vh', width: 'calc(100vw - 40px)', backgroundColor: '#fdfaf5', margin: '20px' ,
       padding: '20px', boxSizing: 'border-box', gap: '20px', color: '#433d3c', fontFamily: '"Plus Jakarta Sans", sans-serif' , borderRadius: '13px' , border: '1px solid #ccc'
     }}>
       
@@ -155,6 +197,7 @@ export default function NeuralChatAdmin() {
               style={{
                 padding: '20px', borderRadius: '22px', cursor: 'pointer', marginBottom: '10px', transition: '0.3s',
                 background: activeSession?.sessionId === session.sessionId ? '#fff1e6' : 'transparent',
+                position: 'relative'
               }}>
               <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                 <div style={{ width: '45px', height: '45px', borderRadius: '50%', background: activeSession?.sessionId === session.sessionId ? accentColor : '#f1ece4', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeSession?.sessionId === session.sessionId ? 'white' : '#9d9489' }}>
@@ -166,6 +209,10 @@ export default function NeuralChatAdmin() {
                       {session.messages[0]?.message || "No messages yet"}
                     </div>
                 </div>
+                {/* Visual Unread Indicator */}
+                {session.messages[0]?.sender === 'user' && localStorage.getItem(`last_msg_${session.sessionId}`) !== session.messages[0]?.id && (
+                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: accentColor }}></div>
+                )}
               </div>
             </div>
           ))}
@@ -184,12 +231,9 @@ export default function NeuralChatAdmin() {
                     <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#d4a373', boxShadow: '0 0 10px #d4a373' }}></div>
                     <h3 style={{ margin: 0, fontWeight: '900', fontSize: '18px' }}>{activeSession.email}</h3>
                 </div>
-                {/* <div style={{ fontSize: '11px', fontWeight: '800', color: '#8b5e3c', background: '#fff1e6', padding: '6px 14px', borderRadius: '12px' }}>
-                   CONNECTED VIA STOREFRONT
-                </div> */}
             </div>
 
-            <div ref={scrollRef} style={{ flex: '110%', padding: '40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' , width: '75%' }}>
+            <div ref={scrollRef} style={{ flex: '1 1 110%', padding: '40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {messages.map((msg, i) => (
                 <div key={i} style={{ alignSelf: msg.sender === 'admin' ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
                   <div style={{ 
