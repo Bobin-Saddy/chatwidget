@@ -1,9 +1,9 @@
 import { json } from "@remix-run/node";
-import db from "../db.server";
+// Fixed Import: Adding curly braces to match your db.server.js
+import { db } from "../db.server"; 
 
 /**
  * GET Request: /api/chat-settings?shop=your-store.myshopify.com
- * This endpoint is public so the storefront widget can access it.
  */
 export const loader = async ({ request }) => {
   const url = new URL(request.url);
@@ -19,7 +19,7 @@ export const loader = async ({ request }) => {
       where: { shop: shop },
     });
 
-    // Agar settings nahi milti (new store), toh default values bhej dein
+    // Default values
     const defaultSettings = {
       primaryColor: "#6366f1",
       headerBgColor: "#384959",
@@ -33,13 +33,13 @@ export const loader = async ({ request }) => {
 
     const responseData = settings || defaultSettings;
 
-    // CORS headers add karna zaroori hai taaki Shopify storefront se request block na ho
+    // CORS headers for Shopify Storefront access
     return json(responseData, {
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type",
-        "Cache-Control": "public, max-age=300", // 5 minutes cache for performance
+        "Cache-Control": "public, max-age=300", 
       },
     });
   } catch (error) {
