@@ -2,7 +2,7 @@ import { json } from "@remix-run/node";
 import { useLoaderData, useSubmit, useNavigation } from "react-router";
 import { useState, useEffect } from "react";
 import { authenticate } from "../shopify.server";
-import db from "../db.server";
+import { prisma as db } from "../db.server";
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
