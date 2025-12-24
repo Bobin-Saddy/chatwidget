@@ -1,147 +1,222 @@
-import React, { useState } from 'react';
+import { json } from "@remix-run/node";
+import { useLoaderData, useSubmit, useNavigation } from "react-router";
+import { useState, useEffect } from "react";
+import { authenticate } from "../shopify.server";
+import { db } from "../db.server";
 
-export default function ArtisanChatWidget({ settings }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('home');
-
-  // Fallback settings if none provided
-  const s = settings || {
+export const loader = async ({ request }) => {
+  const { session } = await authenticate.admin(request);
+  const settings = await db.chatSettings.findUnique({ where: { shop: session.shop } });
+  
+  return json(settings || {
     primaryColor: "#8b5e3c",
-    headerBgColor: "#2d3748",
-    headerTitle: "Live Support",
-    welcomeText: "Hi there 👋",
-    welcomeSubtext: "We are here to help you! Ask us anything or browse our services.",
-    welcomeImg: "https://ui-avatars.com/api/?name=SU&background=fff&color=2d3748"
+    headerBgColor: "#2d2a29",
+    welcomeImg: "https://ui-avatars.com/api/?name=Support&background=8b5e3c&color=fff",
+    headerTitle: "Concierge",
+    welcomeText: "At your service",
+    welcomeSubtext: "How can we assist your journey today?",
+    startConversationText: "Start a conversation"
+  });
+};
+
+export const action = async ({ request }) => {
+  const { session } = await authenticate.admin(request);
+  const formData = await request.formData();
+  const data = Object.fromEntries(formData);
+  await db.chatSettings.upsert({
+    where: { shop: session.shop },
+    update: { ...data, shop: session.shop },
+    create: { ...data, shop: session.shop },
+  });
+  return json({ success: true });
+};
+
+export default function EliteArtisanSettings() {
+  const settings = useLoaderData();
+  const submit = useSubmit();
+  const navigation = useNavigation();
+  const [formState, setFormState] = useState(settings);
+  const [activeSection, setActiveSection] = useState('palette');
+  const [showToast, setShowToast] = useState(false);
+
+  const isSaving = navigation.state === "submitting";
+
+  useEffect(() => {
+    if (navigation.state === "loading" && navigation.formData) {
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    }
+  }, [navigation.state]);
+
+  const handleChange = (f, v) => setFormState(prev => ({ ...prev, [f]: v }));
+  const handleSave = () => {
+    const fd = new FormData();
+    Object.keys(formState).forEach(k => fd.append(k, formState[k]));
+    submit(fd, { method: "POST" });
   };
 
-  if (!isOpen) {
-    return (
-      <button 
-        onClick={() => setIsOpen(true)}
-        style={{
-          position: 'fixed', bottom: '30px', right: '30px',
-          width: '60px', height: '60px', borderRadius: '50%',
-          background: s.primaryColor, color: '#fff', border: 'none',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.2)', cursor: 'pointer',
-          fontSize: '24px', zIndex: 9999
-        }}
-      >
-        💬
-      </button>
-    );
-  }
+  const menuItems = [
+    { id: 'palette', label: 'Visual Palette', icon: '🎨' },
+    { id: 'content', label: 'Messaging', icon: '✍️' },
+    { id: 'behavior', label: 'Logic & Flow', icon: '⚙️' },
+  ];
 
   return (
-    <div style={{
-      position: 'fixed', bottom: '30px', right: '30px',
-      width: '380px', height: '600px', borderRadius: '28px',
-      background: '#e0f2ff', // Light blue background from your image
-      boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
-      display: 'flex', flexDirection: 'column', overflow: 'hidden',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      zIndex: 9999, animation: 'slideUp 0.4s ease-out'
+    <div style={{ 
+      display: 'flex', height: '100vh', width: '100vw', backgroundColor: '#fdfaf5', 
+      color: '#2d2a29', fontFamily: '"Plus Jakarta Sans", sans-serif', overflow: 'hidden' 
     }}>
       
-      {/* 1. COMPACT HEADER */}
+      {/* PANEL 1: SIDEBAR */}
       <div style={{ 
-        background: s.headerBgColor, padding: '25px', color: '#fff',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+        width: '280px', borderRight: '1px solid #eeebe5', padding: '40px 20px',
+        display: 'flex', flexDirection: 'column', gap: '40px', background: '#fff'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img src={s.welcomeImg} style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#fff' }} alt="Avatar" />
-          <div>
-            <div style={{ fontWeight: '700', fontSize: '16px' }}>{s.headerTitle}</div>
-            <div style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px', opacity: 0.9 }}>
-              <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%' }}></span> Online now
-            </div>
-          </div>
+        <div style={{ padding: '0 20px' }}>
+          <div style={{ fontSize: '10px', fontWeight: '900', color: '#8b5e3c', letterSpacing: '3px', marginBottom: '8px' }}>CORE ENGINE</div>
+          <div style={{ fontSize: '20px', fontWeight: '900', letterSpacing: '-0.5px' }}>Artisan Chat</div>
         </div>
-        <button onClick={() => setIsOpen(false)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: '28px', height: '28px', color: '#fff', cursor: 'pointer' }}>✕</button>
-      </div>
 
-      {/* 2. WELCOME CONTENT */}
-      <div style={{ padding: '30px 25px', flex: 1 }}>
-        {/* Team Avatars */}
-        <div style={{ display: 'flex', marginBottom: '20px' }}>
-          {['J', 'S', 'M'].map((letter, i) => (
-            <div key={i} style={{ 
-              width: '45px', height: '45px', borderRadius: '50%', border: '3px solid #e0f2ff',
-              background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 'bold', color: '#2d3748', marginLeft: i === 0 ? 0 : '-15px',
-              boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
-            }}>
-              {letter}
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {menuItems.map(item => (
+            <div 
+              key={item.id}
+              onClick={() => setActiveSection(item.id)}
+              style={{ 
+                padding: '16px 20px', borderRadius: '16px', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: '15px', fontWeight: '700',
+                transition: '0.3s', fontSize: '14px',
+                background: activeSection === item.id ? '#fdfaf5' : 'transparent',
+                color: activeSection === item.id ? '#8b5e3c' : '#a8a29e',
+                boxShadow: activeSection === item.id ? 'inset 0 0 0 1px #f1ece4' : 'none'
+              }}
+            >
+              <span>{item.icon}</span> {item.label}
             </div>
           ))}
+        </nav>
+
+        <div style={{ marginTop: 'auto', padding: '20px' }}>
+          <button 
+            onClick={handleSave}
+            disabled={isSaving}
+            style={{ 
+              width: '100%', padding: '16px', borderRadius: '16px', border: 'none',
+              background: '#2d2a29', color: 'white', fontWeight: '800', cursor: 'pointer',
+              boxShadow: '0 10px 20px rgba(0,0,0,0.1)', transition: '0.3s'
+            }}
+          >
+            {isSaving ? "Syncing..." : "Push Updates"}
+          </button>
         </div>
+      </div>
 
-        <h2 style={{ fontSize: '28px', fontWeight: '800', margin: '0 0 10px 0', color: '#2d3748' }}>
-          {s.welcomeText}
-        </h2>
-        <p style={{ fontSize: '15px', color: '#4a5568', lineHeight: '1.5', margin: 0 }}>
-          {s.welcomeSubtext}
-        </p>
+      {/* PANEL 2: WORKSPACE */}
+      <div style={{ flex: 1, padding: '60px', overflowY: 'auto', background: '#fdfaf5' }}>
+        <header style={{ marginBottom: '50px' }}>
+          <h2 style={{ fontSize: '32px', fontWeight: '900', marginBottom: '10px' }}>
+            {menuItems.find(m => m.id === activeSection).label}
+          </h2>
+          <p style={{ color: '#a8a29e', fontSize: '15px', fontWeight: '500' }}>Customize the experience for your store visitors.</p>
+        </header>
 
-        {/* 3. SEND MESSAGE CARD (Floating Style) */}
+        <div style={{ maxWidth: '700px', display: 'flex', flexDirection: 'column', gap: '30px' }}>
+          {activeSection === 'palette' && (
+            <ConfigCard title="Color Theory">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '25px' }}>
+                <InputGroup label="ACCENT COLOR" value={formState.primaryColor} type="color" onChange={(v) => handleChange('primaryColor', v)} />
+                <InputGroup label="HEADER THEME" value={formState.headerBgColor} type="color" onChange={(v) => handleChange('headerBgColor', v)} />
+              </div>
+            </ConfigCard>
+          )}
+
+          {activeSection === 'content' && (
+            <>
+              <ConfigCard title="Onboarding Copy">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <InputGroup label="CONCIERGE NAME" value={formState.headerTitle} onChange={(v) => handleChange('headerTitle', v)} />
+                  <InputGroup label="GREETING HEADLINE" value={formState.welcomeText} onChange={(v) => handleChange('welcomeText', v)} />
+                  <InputGroup label="WELCOME SUBTEXT" value={formState.welcomeSubtext} area onChange={(v) => handleChange('welcomeSubtext', v)} />
+                </div>
+              </ConfigCard>
+              {/* FIXED: Changed </Card> to </ConfigCard> below */}
+              <ConfigCard title="Identity Image">
+                 <InputGroup label="AVATAR URL" value={formState.welcomeImg} onChange={(v) => handleChange('welcomeImg', v)} />
+              </ConfigCard>
+            </>
+          )}
+          
+          {activeSection === 'behavior' && (
+            <div style={{ padding: '40px', textAlign: 'center', border: '2px dashed #eeebe5', borderRadius: '30px' }}>
+              <div style={{ fontSize: '30px', marginBottom: '15px' }}>⚡</div>
+              <div style={{ fontWeight: '800', color: '#8b5e3c' }}>Advanced Logic Coming Soon</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* PANEL 3: SIMULATOR */}
+      <div style={{ width: '500px', background: '#fff', borderLeft: '1px solid #eeebe5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ 
-          background: '#fff', borderRadius: '20px', padding: '20px', marginTop: '25px',
-          boxShadow: '0 10px 20px rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.1)',
-          cursor: 'pointer'
+          width: '320px', height: '640px', background: '#000', borderRadius: '55px', padding: '12px',
+          boxShadow: '0 40px 80px rgba(139, 94, 60, 0.15)', border: '1px solid #2d2a29',
+          transform: 'perspective(1000px) rotateY(-5deg)'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: '700', color: '#2d3748', marginBottom: '8px' }}>Send us a message</div>
-              <div style={{ fontSize: '13px', color: '#718096' }}>We typically reply in under 5 minutes</div>
-            </div>
-            <div style={{ 
-              width: '36px', height: '36px', borderRadius: '50%', background: '#edf2ff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4c51bf'
-            }}>
-              →
-            </div>
+          <div style={{ background: '#fff', width: '100%', height: '100%', borderRadius: '43px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+             <div style={{ height: '25px', background: '#000', width: '120px', margin: '0 auto', borderBottomLeftRadius: '15px', borderBottomRightRadius: '15px' }}></div>
+             <div style={{ background: formState.headerBgColor, padding: '30px 25px 20px', color: '#fff' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                   <img src={formState.welcomeImg} style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.2)' }} />
+                   <div>
+                    <div style={{ fontWeight: '800', fontSize: '16px' }}>{formState.headerTitle}</div>
+                    <div style={{ fontSize: '10px', opacity: 0.7 }}>Online</div>
+                   </div>
+                </div>
+             </div>
+             <div style={{ flex: 1, padding: '30px', background: '#fdfaf5' }}>
+                <h3 style={{ fontSize: '24px', fontWeight: '900', color: '#2d2a29', margin: '0 0 10px 0' }}>{formState.welcomeText}</h3>
+                <p style={{ fontSize: '14px', color: '#78716c' }}>{formState.welcomeSubtext}</p>
+             </div>
           </div>
         </div>
       </div>
 
-      {/* 4. BOTTOM NAVIGATION BAR */}
-      <div style={{ 
-        background: '#2d3748', padding: '15px 20px', display: 'flex', gap: '10px'
-      }}>
-        <NavButton 
-          active={activeTab === 'home'} 
-          icon="🏠" 
-          label="Home" 
-          onClick={() => setActiveTab('home')} 
-        />
-        <NavButton 
-          active={activeTab === 'messages'} 
-          icon="💬" 
-          label="Messages" 
-          onClick={() => setActiveTab('messages')} 
-        />
-      </div>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-      `}} />
+      {showToast && (
+        <div style={{ position: 'fixed', bottom: '40px', right: '40px', background: '#2d2a29', color: '#fff', padding: '15px 30px', borderRadius: '20px', fontWeight: '800', zIndex: 999 }}>
+          ✓ Saved
+        </div>
+      )}
     </div>
   );
 }
 
-function NavButton({ active, icon, label, onClick }) {
+function ConfigCard({ title, children }) {
   return (
-    <button 
-      onClick={onClick}
-      style={{
-        flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
-        padding: '10px', borderRadius: '12px', border: 'none', cursor: 'pointer',
-        transition: '0.3s',
-        background: active ? '#bfdbfe' : 'transparent',
-        color: active ? '#1e40af' : '#a0aec0'
-      }}
-    >
-      <span style={{ fontSize: '18px' }}>{icon}</span>
-      <span style={{ fontSize: '10px', fontWeight: '800' }}>{label}</span>
-    </button>
+    <div style={{ background: '#fff', borderRadius: '30px', padding: '35px', border: '1px solid #eeebe5', marginBottom: '20px' }}>
+      <div style={{ fontSize: '11px', fontWeight: '900', color: '#8b5e3c', letterSpacing: '2px', marginBottom: '25px', textTransform: 'uppercase' }}>{title}</div>
+      {children}
+    </div>
   );
-}x
+}
+
+function InputGroup({ label, value, type = "text", area = false, onChange }) {
+  const commonStyle = {
+    width: '100%', padding: '15px', borderRadius: '14px', border: '1px solid #f1ece4',
+    background: '#fdfaf5', color: '#2d2a29', fontWeight: '700', fontSize: '14px', outline: 'none', boxSizing: 'border-box'
+  };
+  return (
+    <div style={{ flex: 1 }}>
+      <label style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: '#a8a29e', marginBottom: '8px' }}>{label}</label>
+      {type === 'color' ? (
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <input type="color" value={value} onChange={(e) => onChange(e.target.value)} style={{ width: '50px', height: '50px', border: 'none', cursor: 'pointer' }} />
+          <input type="text" value={value} onChange={(e) => onChange(e.target.value)} style={commonStyle} />
+        </div>
+      ) : area ? (
+        <textarea rows="4" value={value} onChange={(e) => onChange(e.target.value)} style={{ ...commonStyle, resize: 'none' }} />
+      ) : (
+        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} style={commonStyle} />
+      )}
+    </div>
+  );
+}
