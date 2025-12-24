@@ -166,6 +166,7 @@
   async function fetchAndApplySettings() {
     try {
       const response = await fetch(`${BASE_URL}/api/chat-settings?shop=${shop}`);
+      
       if (!response.ok) return;
       const s = await response.json();
 

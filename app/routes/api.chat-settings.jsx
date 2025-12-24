@@ -1,10 +1,6 @@
 import { json } from "@remix-run/node";
-// Fixed Import: Adding curly braces to match your db.server.js
 import { db } from "../db.server"; 
 
-/**
- * GET Request: /api/chat-settings?shop=your-store.myshopify.com
- */
 export const loader = async ({ request }) => {
   const url = new URL(request.url);
   const shop = url.searchParams.get("shop");
@@ -14,12 +10,10 @@ export const loader = async ({ request }) => {
   }
 
   try {
-    // Database se settings fetch karein
     const settings = await db.chatSettings.findUnique({
       where: { shop: shop },
     });
 
-    // Default values
     const defaultSettings = {
       primaryColor: "#6366f1",
       headerBgColor: "#384959",
@@ -33,13 +27,15 @@ export const loader = async ({ request }) => {
 
     const responseData = settings || defaultSettings;
 
-    // CORS headers for Shopify Storefront access
     return json(responseData, {
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type",
-        "Cache-Control": "public, max-age=300", 
+        // 👇 Is line ko change kiya gaya hai taaki update instant dikhe
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
       },
     });
   } catch (error) {
@@ -48,9 +44,6 @@ export const loader = async ({ request }) => {
   }
 };
 
-/**
- * Handle OPTIONS request for CORS preflight
- */
 export const action = async ({ request }) => {
   return json({}, {
     headers: {
