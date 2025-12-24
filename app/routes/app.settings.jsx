@@ -9,13 +9,13 @@ export const loader = async ({ request }) => {
   const settings = await db.chatSettings.findUnique({ where: { shop: session.shop } });
   
   return json(settings || {
-    primaryColor: "#8b5e3c",
-    headerBgColor: "#1a1a1a",
-    welcomeImg: "https://ui-avatars.com/api/?name=Support&background=8b5e3c&color=fff",
-    headerTitle: "Concierge",
-    welcomeText: "At your service",
-    welcomeSubtext: "How can we assist your journey today?",
-    startConversationText: "Start a conversation"
+    primaryColor: "#d4af37", // Artisan Gold
+    headerBgColor: "#121212", // Deep Charcoal
+    welcomeImg: "https://ui-avatars.com/api/?name=Support&background=d4af37&color=fff",
+    headerTitle: "Maison Concierge",
+    welcomeText: "Experience Excellence",
+    welcomeSubtext: "How may we curate your experience today?",
+    startConversationText: "Begin Conversation"
   });
 };
 
@@ -31,7 +31,7 @@ export const action = async ({ request }) => {
   return json({ success: true });
 };
 
-export default function ArtisanStudioV3() {
+export default function ArtisanStudioFinal() {
   const settings = useLoaderData();
   const submit = useSubmit();
   const navigation = useNavigation();
@@ -49,7 +49,6 @@ export default function ArtisanStudioV3() {
   }, [navigation.state]);
 
   const handleChange = (f, v) => setFormState(prev => ({ ...prev, [f]: v }));
-  
   const handleSave = () => {
     const fd = new FormData();
     Object.keys(formState).forEach(k => fd.append(k, formState[k]));
@@ -58,200 +57,151 @@ export default function ArtisanStudioV3() {
 
   return (
     <div style={{ 
-      display: 'flex', height: '100vh', width: '100vw', backgroundColor: '#fcfaf7', 
-      color: '#2d2a29', fontFamily: '"Plus Jakarta Sans", sans-serif', overflow: 'hidden' 
+      display: 'flex', height: '100vh', width: '100vw', backgroundColor: '#faf9f6', 
+      color: '#1a1a1a', fontFamily: '"Cormorant Garamond", serif', overflow: 'hidden' 
     }}>
       
-      {/* 1. GLASS NAVIGATION RAIL */}
+      {/* 1. FLOATING SIDEBAR (GLASSMORPHISM) */}
       <div style={{ 
-        width: '90px', background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(20px)',
-        borderRight: '1px solid rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', 
-        alignItems: 'center', padding: '40px 0', zIndex: 10
+        width: '110px', display: 'flex', flexDirection: 'column', alignItems: 'center', 
+        padding: '40px 0', borderRight: '1px solid rgba(212, 175, 55, 0.15)',
+        background: 'rgba(255, 255, 255, 0.4)', backdropFilter: 'blur(15px)', zIndex: 10
       }}>
         <div style={{ 
-            width: '44px', height: '44px', background: 'linear-gradient(135deg, #8b5e3c, #5d3f28)', 
-            borderRadius: '14px', marginBottom: '50px', display: 'flex', alignItems: 'center', 
-            justifyContent: 'center', color: '#fff', fontSize: '20px', fontWeight: '900',
-            boxShadow: '0 10px 20px rgba(139, 94, 60, 0.3)'
+            width: '50px', height: '50px', background: '#1a1a1a', borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d4af37',
+            fontSize: '24px', fontWeight: '300', marginBottom: '60px', border: '1px solid #d4af37'
         }}>A</div>
         
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <SidebarIcon icon="🎨" active={activeTab === 'palette'} onClick={() => setActiveTab('palette')} />
-          <SidebarIcon icon="✍️" active={activeTab === 'content'} onClick={() => setActiveTab('content')} />
-        </div>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+          <NavIcon icon="✧" active={activeTab === 'palette'} onClick={() => setActiveTab('palette')} />
+          <NavIcon icon="✎" active={activeTab === 'content'} onClick={() => setActiveTab('content')} />
+        </nav>
 
-        <div style={{ marginTop: 'auto' }}>
-           <button 
-            onClick={handleSave} 
-            disabled={isSaving}
-            className="save-btn"
-            style={{ 
-             width: '54px', height: '54px', borderRadius: '50%', border: 'none', 
-             background: isSaving ? '#d1ccc5' : '#1a1a1a', color: '#fff', cursor: 'pointer',
-             boxShadow: '0 15px 30px rgba(0,0,0,0.2)', transition: '0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-           }}>
-             {isSaving ? '...' : 'Save'}
-           </button>
+        <button 
+          onClick={handleSave}
+          disabled={isSaving}
+          style={{ 
+            marginTop: 'auto', width: '60px', height: '60px', borderRadius: '50%',
+            background: isSaving ? '#e0e0e0' : '#1a1a1a', color: '#d4af37', border: 'none',
+            cursor: 'pointer', transition: '0.5s cubic-bezier(0.19, 1, 0.22, 1)',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
+          }}
+        >
+          {isSaving ? "..." : "Save"}
+        </button>
+      </div>
+
+      {/* 2. THE CURATED WORKSPACE */}
+      <div style={{ flex: 1, padding: '100px 10%', overflowY: 'auto' }}>
+        <header style={{ marginBottom: '80px', animation: 'fadeIn 1s ease' }}>
+          <span style={{ fontSize: '10px', letterSpacing: '5px', color: '#d4af37', fontWeight: '800', textTransform: 'uppercase' }}>Precision Interface</span>
+          <h1 style={{ fontSize: '64px', fontWeight: '300', margin: '15px 0', letterSpacing: '-2px', fontFamily: '"Playfair Display", serif' }}>
+            {activeTab === 'palette' ? 'Visual Soul' : 'Brand Voice'}
+          </h1>
+          <div style={{ width: '40px', height: '2px', background: '#d4af37' }}></div>
+        </header>
+
+        <div style={{ maxWidth: '800px', display: 'grid', gridTemplateColumns: '1fr', gap: '50px' }}>
+          {activeTab === 'palette' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+              <ArtisanInput label="Accent Hue" type="color" value={formState.primaryColor} onChange={(v) => handleChange('primaryColor', v)} />
+              <ArtisanInput label="Header Depth" type="color" value={formState.headerBgColor} onChange={(v) => handleChange('headerBgColor', v)} />
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+              <ArtisanInput label="Concierge Title" value={formState.headerTitle} onChange={(v) => handleChange('headerTitle', v)} />
+              <ArtisanInput label="Lead Greeting" value={formState.welcomeText} onChange={(v) => handleChange('welcomeText', v)} />
+              <ArtisanInput label="Manifesto/Bio" area value={formState.welcomeSubtext} onChange={(v) => handleChange('welcomeSubtext', v)} />
+              <ArtisanInput label="Avatar Link" value={formState.welcomeImg} onChange={(v) => handleChange('welcomeImg', v)} />
+            </div>
+          )}
         </div>
       </div>
 
-      {/* 2. MAIN CONFIGURATION CANVAS */}
-      <div style={{ flex: 1, padding: '80px 10%', overflowY: 'auto', position: 'relative' }}>
-        <div style={{ maxWidth: '720px' }}>
-          <header style={{ marginBottom: '60px', animation: 'fadeIn 0.8s ease-out' }}>
-            <h1 style={{ fontSize: '56px', fontWeight: '900', letterSpacing: '-3px', margin: 0, color: '#1a1a1a' }}>
-              Studio <span style={{ color: '#8b5e3c', opacity: 0.4 }}>/</span> {activeTab === 'palette' ? 'Visuals' : 'Voice'}
-            </h1>
-            <p style={{ color: '#8b847e', fontSize: '18px', marginTop: '12px', fontWeight: '500' }}>
-              Precision tools for the modern digital artisan.
-            </p>
-          </header>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
-            {activeTab === 'palette' ? (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
-                <LuxuryCard label="ACCENT COLOR" description="The primary brand soul.">
-                    <ColorInput value={formState.primaryColor} onChange={(v) => handleChange('primaryColor', v)} />
-                </LuxuryCard>
-                <LuxuryCard label="HEADER CANVAS" description="Background for the top bar.">
-                    <ColorInput value={formState.headerBgColor} onChange={(v) => handleChange('headerBgColor', v)} />
-                </LuxuryCard>
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
-                 <LuxuryInput label="Identity URL" value={formState.welcomeImg} onChange={(v) => handleChange('welcomeImg', v)} />
-                 <LuxuryInput label="Concierge Name" value={formState.headerTitle} onChange={(v) => handleChange('headerTitle', v)} />
-                 <LuxuryInput label="Greeting Title" value={formState.welcomeText} onChange={(v) => handleChange('welcomeText', v)} />
-                 <LuxuryInput label="Introductory Subtext" area value={formState.welcomeSubtext} onChange={(v) => handleChange('welcomeSubtext', v)} />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* 3. SIMULATOR PREVIEW (Right Panel) */}
-      <div style={{ width: '540px', background: '#fff', borderLeft: '1px solid #f1ece4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div className="simulator-frame">
-          <div className="phone-body">
-             <div className="notch"></div>
-             
-             <div style={{ background: formState.headerBgColor, padding: '45px 25px 30px', color: '#fff', transition: '0.6s' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                   <div style={{ position: 'relative' }}>
-                    <img src={formState.welcomeImg} style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.2)' }} />
-                    <div className="status-dot"></div>
-                   </div>
-                   <div>
-                    <div style={{ fontWeight: '900', fontSize: '18px' }}>{formState.headerTitle}</div>
-                    <div style={{ fontSize: '11px', opacity: 0.7, fontWeight: '700' }}>Active Support</div>
-                   </div>
+      {/* 3. THE VIRTUAL SHOWROOM (Simulator) */}
+      <div style={{ width: '600px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
+        <div style={{ 
+          width: '340px', height: '680px', background: '#121212', borderRadius: '60px', padding: '15px',
+          boxShadow: '40px 60px 100px rgba(212, 175, 55, 0.1)', border: '1px solid #e0e0e0',
+          position: 'relative'
+        }}>
+          {/* Inner Phone Screen */}
+          <div style={{ background: '#fff', width: '100%', height: '100%', borderRadius: '45px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ height: '30px', background: '#000', width: '150px', margin: '0 auto', borderBottomLeftRadius: '20px', borderBottomRightRadius: '20px' }}></div>
+            
+            <div style={{ background: formState.headerBgColor, padding: '50px 30px 30px', color: '#fff', transition: '0.8s' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  <img src={formState.welcomeImg} style={{ width: '55px', height: '55px', borderRadius: '50%', border: '1px solid #d4af37' }} />
+                  <div>
+                    <div style={{ fontWeight: '300', fontSize: '20px', letterSpacing: '1px' }}>{formState.headerTitle}</div>
+                    <div className="status-indicator">Atelier Online</div>
+                  </div>
                 </div>
-             </div>
+            </div>
 
-             <div style={{ flex: 1, padding: '40px 30px', background: '#fff', display: 'flex', flexDirection: 'column' }}>
-                <h2 style={{ fontSize: '32px', fontWeight: '900', color: '#1a1a1a', lineHeight: 1.1, margin: '0 0 16px 0', letterSpacing: '-1px' }}>{formState.welcomeText}</h2>
-                <p style={{ fontSize: '16px', color: '#78716c', fontWeight: '500', lineHeight: 1.6 }}>{formState.welcomeSubtext}</p>
-                
-                <div style={{ 
-                  marginTop: 'auto', background: '#fcfaf7', padding: '22px', borderRadius: '24px', 
-                  border: '1px solid #f1ece4', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                }}>
-                  <span style={{ fontWeight: '800', fontSize: '14px', color: '#d1ccc5' }}>Start typing...</span>
-                  <div style={{ background: formState.primaryColor, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 8px 15px rgba(0,0,0,0.1)' }}>→</div>
-                </div>
-             </div>
+            <div style={{ flex: 1, padding: '40px', background: '#fff', display: 'flex', flexDirection: 'column' }}>
+               <h3 style={{ fontSize: '36px', fontWeight: '300', marginBottom: '20px', lineHeight: 1.1, fontFamily: '"Playfair Display", serif' }}>{formState.welcomeText}</h3>
+               <p style={{ fontSize: '16px', color: '#666', lineHeight: 1.8, fontStyle: 'italic' }}>{formState.welcomeSubtext}</p>
+               
+               <div style={{ 
+                 marginTop: 'auto', background: '#faf9f6', padding: '25px', borderRadius: '0', 
+                 borderBottom: `2px solid ${formState.primaryColor}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+               }}>
+                 <span style={{ fontSize: '11px', letterSpacing: '3px', fontWeight: '800', textTransform: 'uppercase' }}>Inquire</span>
+                 <div style={{ color: formState.primaryColor }}>→</div>
+               </div>
+            </div>
           </div>
         </div>
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .save-btn:hover { transform: translateY(-3px) scale(1.05); }
-        .save-btn:active { transform: scale(0.95); }
-
-        .simulator-frame {
-          width: 320px; height: 660px; background: #000; border-radius: 54px; padding: 12px;
-          box-shadow: 0 40px 100px rgba(139, 94, 60, 0.15);
-          transform: perspective(1000px) rotateY(-10deg) rotateX(2deg);
-        }
-        
-        .phone-body {
-          background: #fff; width: 100%; height: 100%; border-radius: 42px; overflow: hidden; display: flex; flexDirection: column;
-        }
-
-        .notch {
-          position: absolute; top: 0; left: 50%; transform: translateX(-50%); 
-          width: 140px; height: 30px; background: #000; border-bottom-left-radius: 18px; 
-          border-bottom-right-radius: 18px; z-index: 5;
-        }
-
-        .status-dot {
-          position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px;
-          background: #4ade80; border: 3px solid #fff; border-radius: 50%;
-          animation: statusPulse 2s infinite;
-        }
-
-        @keyframes statusPulse { 
-          0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.6); }
-          70% { box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
-          100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,900;1,400&display=swap');
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .status-indicator { font-size: 10px; color: #d4af37; text-transform: uppercase; letter-spacing: 2px; display: flex; align-items: center; gap: 8px; margin-top: 5px; }
+        .status-indicator::before { content: ""; width: 6px; height: 6px; background: #d4af37; border-radius: 50%; display: inline-block; box-shadow: 0 0 10px #d4af37; }
       `}} />
 
       {showToast && (
-        <div style={{ position: 'fixed', bottom: '40px', left: '130px', background: '#1a1a1a', color: '#fff', padding: '16px 32px', borderRadius: '14px', fontWeight: '800', zIndex: 100, animation: 'fadeIn 0.3s ease-out' }}>
-          ✓ Published to Store
+        <div style={{ position: 'fixed', bottom: '50px', left: '50%', transform: 'translateX(-50%)', background: '#1a1a1a', color: '#d4af37', padding: '20px 40px', letterSpacing: '3px', fontSize: '12px', fontWeight: '800', border: '1px solid #d4af37', zIndex: 100 }}>
+          WORK DEPLOYED
         </div>
       )}
     </div>
   );
 }
 
-// Artisan UI Atomic Components
-function SidebarIcon({ icon, active, onClick }) {
+// Atomic Artisan Components
+function NavIcon({ icon, active, onClick }) {
   return (
     <div onClick={onClick} style={{ 
-      width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: '22px', cursor: 'pointer', transition: '0.4s cubic-bezier(0.2, 0.8, 0.2, 1)',
-      background: active ? '#fff' : 'transparent',
-      boxShadow: active ? '0 10px 20px rgba(0,0,0,0.05)' : 'none',
-      transform: active ? 'scale(1.1)' : 'scale(1)',
-      opacity: active ? 1 : 0.4
+      fontSize: '28px', cursor: 'pointer', transition: '0.3s',
+      color: active ? '#d4af37' : '#e0e0e0',
+      transform: active ? 'scale(1.2)' : 'scale(1)'
     }}>{icon}</div>
   );
 }
 
-function LuxuryCard({ label, description, children }) {
-  return (
-    <div style={{ 
-        background: '#fff', padding: '30px', borderRadius: '24px', 
-        boxShadow: '0 4px 20px rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.03)' 
-    }}>
-      <label style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: '#8b5e3c', letterSpacing: '2px', marginBottom: '4px' }}>{label}</label>
-      <p style={{ fontSize: '12px', color: '#a8a29e', margin: '0 0 20px 0', fontWeight: '500' }}>{description}</p>
-      {children}
-    </div>
-  );
-}
+function ArtisanInput({ label, value, type="text", area=false, onChange }) {
+  const baseStyle = {
+    width: '100%', padding: '20px 0', border: 'none', borderBottom: '1px solid #e0e0e0',
+    background: 'transparent', fontSize: '18px', outline: 'none', fontWeight: '300',
+    transition: '0.3s', color: '#1a1a1a'
+  };
 
-function ColorInput({ value, onChange }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-      <input type="color" value={value} onChange={(e) => onChange(e.target.value)} style={{ width: '48px', height: '48px', border: 'none', borderRadius: '12px', cursor: 'pointer', padding: 0 }} />
-      <span style={{ fontWeight: '800', fontSize: '14px', color: '#1a1a1a' }}>{value.toUpperCase()}</span>
-    </div>
-  );
-}
-
-function LuxuryInput({ label, value, area = false, onChange }) {
-  return (
-    <div style={{ background: '#fff', padding: '24px', borderRadius: '24px', border: '1px solid rgba(0,0,0,0.03)' }}>
-      <label style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: '#8b5e3c', letterSpacing: '2px', marginBottom: '12px' }}>{label}</label>
-      {area ? (
-        <textarea rows="4" value={value} onChange={(e) => onChange(e.target.value)} style={{ width: '100%', border: 'none', background: '#fcfaf7', borderRadius: '14px', padding: '16px', fontWeight: '700', fontSize: '15px', outline: 'none', resize: 'none', boxSizing: 'border-box' }} />
+    <div style={{ position: 'relative' }}>
+      <label style={{ fontSize: '10px', color: '#d4af37', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>{label}</label>
+      {type === 'color' ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginTop: '10px' }}>
+          <input type="color" value={value} onChange={(e) => onChange(e.target.value)} style={{ width: '40px', height: '40px', border: '1px solid #d4af37', padding: '2px', background: '#fff', cursor: 'pointer' }} />
+          <span style={{ fontSize: '14px', letterSpacing: '2px' }}>{value.toUpperCase()}</span>
+        </div>
+      ) : area ? (
+        <textarea rows="3" value={value} onChange={(e) => onChange(e.target.value)} style={{ ...baseStyle, resize: 'none' }} />
       ) : (
-        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} style={{ width: '100%', border: 'none', background: '#fcfaf7', borderRadius: '14px', padding: '16px', fontWeight: '700', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }} />
+        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} style={baseStyle} />
       )}
     </div>
   );
