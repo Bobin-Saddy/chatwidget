@@ -1,5 +1,5 @@
 import { json } from "@remix-run/node";
-import { prisma as db } from "../db.server";
+import db from "../db.server";
 
 /**
  * GET Request: /api/chat-settings?shop=your-store.myshopify.com
