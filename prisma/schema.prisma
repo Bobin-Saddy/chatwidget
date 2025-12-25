@@ -71,4 +71,5 @@ model ChatSettings {
   startConversationText String   @default("Start a conversation")
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+  launcherIcon  String   @default("bubble")
 }

@@ -178,31 +178,28 @@ async function fetchAndApplySettings() {
     if (!response.ok) return;
     const s = await response.json();
     if (s) {
-      // 1. Update Primary Colors
-      document.documentElement.style.setProperty('--chat-primary', s.primaryColor);
+      // Color Updates
       launcher.style.background = s.primaryColor;
-      document.getElementById("chat-send").style.background = s.primaryColor;
+      document.getElementById("chat-header").style.background = s.headerBgColor;
+      document.getElementById("home-hero-bg").style.background = s.heroBgColor;
       
-      // 2. Update Header & Nav Colors
-      const header = document.getElementById("chat-header");
-      header.style.background = s.headerBgColor;
-      document.getElementById("chat-nav").style.background = s.headerBgColor;
-      document.getElementById("chat-submit-info").style.background = s.headerBgColor;
-      document.getElementById("start-chat-trigger").style.borderColor = s.headerBgColor;
-
-      // 3. Update Hero Section
-      const hero = document.getElementById("home-hero-bg");
-      hero.style.background = s.heroBgColor; // Apply new hero bg color
-
-      // 4. Update Dynamic Text
+      // Icon Update
+      const iconContainer = document.getElementById("launcher-icon");
+      const iconPaths = {
+        bubble: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`,
+        support: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
+        sparkle: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg>`,
+        send: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>`
+      };
+      
+      if(s.launcherIcon && iconPaths[s.launcherIcon]) {
+        iconContainer.innerHTML = iconPaths[s.launcherIcon];
+      }
+      
+      // Text Updates
       document.getElementById("header-title-text").innerText = s.headerTitle;
-      document.getElementById("header-subtitle-text").innerHTML = `<span class="pulse"></span> ${s.headerSubtitle}`;
-      document.getElementById("card-reply-time").innerText = s.replyTimeText; // New
-      document.getElementById("welcome-h1").innerText = s.welcomeText;
+      document.getElementById("card-reply-time").innerText = s.replyTimeText;
       document.getElementById("welcome-p").innerText = s.welcomeSubtext;
-      
-      // 5. Update Avatar
-      if(s.welcomeImg) document.getElementById("main-support-avatar").src = s.welcomeImg;
     }
   } catch (e) { console.error("Failed to load settings"); }
 }
