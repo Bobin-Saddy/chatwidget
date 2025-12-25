@@ -24,6 +24,9 @@ const Icons = {
   Paperclip: () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
   ),
+  Smile: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+  ),
   X: () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
   )
@@ -49,12 +52,15 @@ export default function NeuralChatAdmin() {
   const [reply, setReply] = useState("");
   const [accentColor] = useState("#8b5e3c"); 
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedImage, setSelectedImage] = useState(null); // Lightbox state
+  const [selectedImage, setSelectedImage] = useState(null); 
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [locationInfo, setLocationInfo] = useState({ city: "Detecting...", country: "", flag: "" });
 
   const fetcher = useFetcher();
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  const emojis = ["😊", "👍", "❤️", "🙌", "✨", "🔥", "✅", "🤔", "💡", "🚀", "👋", "🙏"];
 
   const filteredSessions = useMemo(() => {
     return sessions.filter(s => s.email?.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -89,6 +95,11 @@ export default function NeuralChatAdmin() {
     reader.readAsDataURL(file);
   };
 
+  const addEmoji = (emoji) => {
+    setReply(prev => prev + emoji);
+    setShowEmojiPicker(false);
+  };
+
   const handleReply = (text = null, fileUrl = null) => {
     const finalMsg = text || reply;
     if ((!finalMsg.trim() && !fileUrl) || !activeSession) return;
@@ -110,14 +121,11 @@ export default function NeuralChatAdmin() {
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', backgroundColor: '#fdfaf5', padding: '20px', boxSizing: 'border-box', gap: '20px', color: '#433d3c', fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
       
-      {/* --- IMAGE POPUP (LIGHTBOX) --- */}
+      {/* --- IMAGE POPUP --- */}
       {selectedImage && (
-        <div 
-          onClick={() => setSelectedImage(null)}
-          style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out', animation: 'fadeIn 0.2s ease' }}
-        >
-          <button style={{ position: 'absolute', top: '30px', right: '30px', background: 'none', border: 'none', cursor: 'pointer' }}><Icons.X /></button>
-          <img src={selectedImage} style={{ maxWidth: '90%', maxHeight: '90%', borderRadius: '8px', boxShadow: '0 0 50px rgba(0,0,0,0.5)' }} alt="Full view" />
+        <div onClick={() => setSelectedImage(null)} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out' }}>
+          <button style={{ position: 'absolute', top: '30px', right: '30px', background: 'none', border: 'none' }}><Icons.X /></button>
+          <img src={selectedImage} style={{ maxWidth: '90%', maxHeight: '90%', borderRadius: '8px' }} alt="Full view" />
         </div>
       )}
 
@@ -176,17 +184,15 @@ export default function NeuralChatAdmin() {
                           <img 
                             src={msg.fileUrl} 
                             onClick={() => setSelectedImage(msg.fileUrl)}
-                            style={{ maxWidth: '100%', maxHeight: '250px', borderRadius: '12px', cursor: 'zoom-in', display: 'block', transition: 'transform 0.2s' }} 
+                            style={{ maxWidth: '100%', maxHeight: '250px', borderRadius: '12px', cursor: 'zoom-in', display: 'block' }} 
                             alt="Sent content" 
-                            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-                            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
                           />
-                          <div style={{ fontSize: '11px', marginTop: '8px', opacity: 0.8, padding: '0 5px' }}>{msg.message}</div>
+                          <div style={{ fontSize: '11px', marginTop: '8px', opacity: 0.8 }}>{msg.message}</div>
                         </div>
                       ) : (
                         <div>
                            {msg.message}
-                           {msg.fileUrl && <a href={msg.fileUrl} target="_blank" style={{ display: 'block', marginTop: '10px', fontSize: '12px', color: 'inherit', fontWeight: 'bold' }}>📎 View Document</a>}
+                           {msg.fileUrl && <a href={msg.fileUrl} target="_blank" rel="noreferrer" style={{ display: 'block', marginTop: '10px', fontSize: '12px', color: 'inherit', fontWeight: 'bold' }}>📎 View Attachment</a>}
                         </div>
                       )}
                     </div>
@@ -195,11 +201,24 @@ export default function NeuralChatAdmin() {
               })}
             </div>
 
-            <div style={{ padding: '30px 40px', borderTop: '1px solid #f1ece4' }}>
+            <div style={{ padding: '30px 40px', borderTop: '1px solid #f1ece4', position: 'relative' }}>
+              
+              {/* EMOJI PICKER POPUP */}
+              {showEmojiPicker && (
+                <div style={{ position: 'absolute', bottom: '100px', left: '40px', background: 'white', padding: '15px', borderRadius: '20px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', zIndex: 100 }}>
+                  {emojis.map(e => (
+                    <button key={e} onClick={() => addEmoji(e)} style={{ fontSize: '20px', border: 'none', background: 'none', cursor: 'pointer' }}>{e}</button>
+                  ))}
+                </div>
+              )}
+
               <div style={{ display: 'flex', alignItems: 'center', background: '#fdfaf5', borderRadius: '100px', padding: '8px 10px 8px 20px', border: '1px solid #f1ece4' }}>
                 <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} accept="image/*" />
-                <button onClick={() => fileInputRef.current.click()} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '10px', color: '#8b5e3c' }}><Icons.Paperclip /></button>
-                <input placeholder="Reply..." style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', fontSize: '15px' }} value={reply} onChange={(e) => setReply(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleReply()} />
+                
+                <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '10px', color: '#c2b9af' }}><Icons.Smile /></button>
+                <button onClick={() => fileInputRef.current.click()} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '10px', color: '#c2b9af' }}><Icons.Paperclip /></button>
+                
+                <input placeholder="Reply..." style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', fontSize: '15px', color: '#433d3c' }} value={reply} onChange={(e) => setReply(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleReply()} />
                 <button onClick={() => handleReply()} style={{ width: '45px', height: '45px', borderRadius: '50%', background: accentColor, border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icons.Send /></button>
               </div>
             </div>
@@ -213,23 +232,17 @@ export default function NeuralChatAdmin() {
 
       {/* 3. INTELLIGENCE PANEL */}
       <div style={{ width: '300px', padding: '30px 0', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-         <h4 style={{ fontSize: '11px', fontWeight: '900', color: '#c2b9af', textTransform: 'uppercase' }}>Context</h4>
+         <h4 style={{ fontSize: '11px', fontWeight: '900', color: '#c2b9af', textTransform: 'uppercase' }}>Visitor Details</h4>
          {activeSession && (
-           <>
-            <div style={{ padding: '20px', background: '#fff', borderRadius: '20px', border: '1px solid #f1ece4' }}>
-              <div style={{ fontSize: '10px', color: '#a8a29e', fontWeight: '800' }}>VISITOR TIME</div>
+           <div style={{ padding: '20px', background: '#fff', borderRadius: '20px', border: '1px solid #f1ece4' }}>
+              <div style={{ fontSize: '10px', color: '#a8a29e', fontWeight: '800', marginBottom: '10px' }}>LOCAL TIME</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '900' }}>
                 <Icons.Clock /> {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </div>
             </div>
-            <div style={{ padding: '20px', background: '#fff1e6', borderRadius: '20px', color: accentColor, fontSize: '13px' }}>
-              Active on <b>{currentShop}</b>.
-            </div>
-           </>
          )}
       </div>
       <style>{`
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #e2d9d0; border-radius: 10px; }
       `}</style>
