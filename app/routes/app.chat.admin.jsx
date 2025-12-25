@@ -2,7 +2,7 @@ import { json } from "@remix-run/node";
 import { useLoaderData, useFetcher } from "react-router";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { db } from "../db.server";
-import { authenticate } from "../shopify.server"; // Crucial for fixing the 'shop' null error
+import { authenticate } from "../shopify.server";
 
 // --- ARTISAN ICON SET ---
 const Icons = {
@@ -15,19 +15,18 @@ const Icons = {
   User: ({ size = 20 }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
   ),
-  Globe: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-  ),
   Clock: () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
   ),
   Store: () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+  ),
+  Paperclip: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
   )
 };
 
 export const loader = async ({ request }) => {
-  // Fix: Use Shopify Auth to get the shop domain securely
   const { session } = await authenticate.admin(request);
   const shop = session.shop;
 
@@ -36,7 +35,7 @@ export const loader = async ({ request }) => {
   }
 
   const sessions = await db.chatSession.findMany({
-    where: { shop: shop }, // Filter by store
+    where: { shop: shop },
     include: { messages: { orderBy: { createdAt: "desc" }, take: 1 } },
     orderBy: { createdAt: "desc" }
   });
@@ -55,6 +54,7 @@ export default function NeuralChatAdmin() {
 
   const fetcher = useFetcher();
   const scrollRef = useRef(null);
+  const fileInputRef = useRef(null); // Ref for file upload
 
   const filteredSessions = useMemo(() => {
     return sessions.filter(s => s.email?.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -64,7 +64,6 @@ export default function NeuralChatAdmin() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
 
-  // Polling for new messages
   useEffect(() => {
     if (!activeSession) return;
     const interval = setInterval(async () => {
@@ -98,20 +97,33 @@ export default function NeuralChatAdmin() {
     setMessages(data);
   };
 
-  const handleReply = (text = null) => {
+  // Logic to handle file selection
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Note: For a real production app, you would upload this file to S3/Cloudinary
+    // and get a URL. For now, we simulate the text.
+    const mockUrl = "https://via.placeholder.com/150"; // Replace with real upload logic
+    handleReply(`Sent a file: ${file.name}`, mockUrl);
+  };
+
+  const handleReply = (text = null, fileUrl = null) => {
     const finalMsg = text || reply;
-    if (!finalMsg.trim() || !activeSession) return;
+    if (!finalMsg.trim() && !fileUrl || !activeSession) return;
     
     const newMessage = { 
       message: finalMsg, 
       sender: "admin", 
       createdAt: new Date().toISOString(), 
       sessionId: activeSession.sessionId,
-      shop: currentShop 
+      shop: currentShop,
+      fileUrl: fileUrl || null // Include fileUrl in the data
     };
 
     setMessages(prev => [...prev, newMessage]);
     setReply("");
+
     fetcher.submit(JSON.stringify(newMessage), { 
       method: "post", 
       action: "/app/chat/message", 
@@ -161,7 +173,7 @@ export default function NeuralChatAdmin() {
                   <Icons.User />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: '800', fontSize: '15px' }}>{session.email.split('@')[0]}</div>
+                    <div style={{ fontWeight: '800', fontSize: '15px' }}>{session.email?.split('@')[0] || "User"}</div>
                     <div style={{ fontSize: '12px', color: '#a8a29e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {session.messages[0]?.message || "No messages yet"}
                     </div>
@@ -184,12 +196,9 @@ export default function NeuralChatAdmin() {
                     <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#d4a373', boxShadow: '0 0 10px #d4a373' }}></div>
                     <h3 style={{ margin: 0, fontWeight: '900', fontSize: '18px' }}>{activeSession.email}</h3>
                 </div>
-                {/* <div style={{ fontSize: '11px', fontWeight: '800', color: '#8b5e3c', background: '#fff1e6', padding: '6px 14px', borderRadius: '12px' }}>
-                   CONNECTED VIA STOREFRONT
-                </div> */}
             </div>
 
-            <div ref={scrollRef} style={{ flex: '110%', padding: '40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' , width: '75%' }}>
+            <div ref={scrollRef} style={{ flex: '1', padding: '40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {messages.map((msg, i) => (
                 <div key={i} style={{ alignSelf: msg.sender === 'admin' ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
                   <div style={{ 
@@ -201,6 +210,13 @@ export default function NeuralChatAdmin() {
                     border: msg.sender === 'admin' ? 'none' : '1px solid #f1ece4'
                   }}>
                     {msg.message}
+                    {msg.fileUrl && (
+                      <div style={{ marginTop: '10px', borderTop: msg.sender === 'admin' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #eee', paddingTop: '8px' }}>
+                         <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer" style={{ color: msg.sender === 'admin' ? 'white' : accentColor, fontWeight: '800', fontSize: '12px', textDecoration: 'none' }}>
+                            View Attachment 📎
+                         </a>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -212,10 +228,26 @@ export default function NeuralChatAdmin() {
                   <button key={t} onClick={() => handleReply(t)} style={{ padding: '8px 16px', borderRadius: '100px', border: '1px solid #f1ece4', fontSize: '11px', fontWeight: '800', color: '#78716c', cursor: 'pointer', transition: '0.2s' }}>{t}</button>
                 ))}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', background: '#fdfaf5', borderRadius: '100px', padding: '10px 10px 10px 25px', border: '1px solid #f1ece4' }}>
+              <div style={{ display: 'flex', alignItems: 'center', background: '#fdfaf5', borderRadius: '100px', padding: '10px 10px 10px 15px', border: '1px solid #f1ece4' }}>
+                
+                {/* File Upload Hidden Input */}
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  style={{ display: 'none' }} 
+                  onChange={handleFileChange} 
+                />
+                
+                <button 
+                  onClick={() => fileInputRef.current.click()}
+                  style={{ background: 'none', border: 'none', color: '#c2b9af', cursor: 'pointer', padding: '10px' }}
+                >
+                  <Icons.Paperclip />
+                </button>
+
                 <input 
                   placeholder="Type your response..." 
-                  style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', fontSize: '15px', color: '#433d3c' }}
+                  style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', fontSize: '15px', color: '#433d3c', paddingLeft: '10px' }}
                   value={reply} onChange={(e) => setReply(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleReply()}
                 />
