@@ -4,29 +4,28 @@ import { useState, useEffect } from "react";
 import { authenticate } from "../shopify.server";
 import { db } from "../db.server";
 
-// --- CUSTOM SVG ICON LIBRARY ---
+// --- PREMIUM SVG ICONSET ---
 const ICON_MAP = {
-  bubble: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>,
-  support: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 7a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3z"/></svg>,
-  sparkle: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/></svg>,
-  send: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+  bubble: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+  support: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+  sparkle: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>,
+  send: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
 };
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
   const settings = await db.chatSettings.findUnique({ where: { shop: session.shop } });
   return json(settings || {
-    primaryColor: "#7C3AED",
-    headerBgColor: "#1E293B",
-    heroBgColor: "#F1F5F9",
+    primaryColor: "#4F46E5",
+    headerBgColor: "#111827",
+    heroBgColor: "#EEF2FF",
     launcherIcon: "bubble",
-    welcomeImg: "https://ui-avatars.com/api/?name=Support&background=7C3AED&color=fff",
-    headerTitle: "Support Guru",
-    headerSubtitle: "Always Active",
-    welcomeText: "Welcome to our store!",
-    welcomeSubtext: "How can we assist you today?",
-    replyTimeText: "We reply in seconds",
-    startConversationText: "Chat Now"
+    welcomeImg: "https://ui-avatars.com/api/?name=Support&background=4F46E5&color=fff",
+    headerTitle: "Customer Care",
+    headerSubtitle: "Online & Ready",
+    welcomeText: "How can we help?",
+    welcomeSubtext: "Our team typically responds in under 5 minutes.",
+    replyTimeText: "Replies instantly",
   });
 };
 
@@ -42,13 +41,13 @@ export const action = async ({ request }) => {
   return json({ success: true });
 };
 
-export default function PremiumSettings() {
+export default function UltimateSettings() {
   const settings = useLoaderData();
   const actionData = useActionData();
   const submit = useSubmit();
   const navigation = useNavigation();
   const [formState, setFormState] = useState(settings);
-  const [activeTab, setActiveTab] = useState('design');
+  const [activeTab, setActiveTab] = useState('style');
   const [toast, setToast] = useState(false);
 
   useEffect(() => { if (actionData?.success) { setToast(true); setTimeout(() => setToast(false), 3000); } }, [actionData]);
@@ -57,149 +56,173 @@ export default function PremiumSettings() {
   const handleSave = () => submit(formState, { method: "POST" });
 
   return (
-    <div style={{ background: '#0F172A', minHeight: '100vh', color: '#E2E8F0', fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div style={{ background: '#F3F4F6', minHeight: '100vh', display: 'flex', fontFamily: 'Inter, sans-serif' }}>
       
-      {/* --- TOP NAVIGATION BAR --- */}
-      <div style={{ borderBottom: '1px solid #1E293B', padding: '16px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0F172A', position: 'sticky', top: 0, zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '32px', height: '32px', background: 'linear-gradient(45deg, #7C3AED, #EC4899)', borderRadius: '8px' }}></div>
-          <span style={{ fontWeight: '800', fontSize: '20px', letterSpacing: '-0.5px' }}>WIDGET PRO</span>
+      {/* --- COLUMN 1: NAVIGATION --- */}
+      <div style={{ width: '260px', background: '#FFFFFF', borderRight: '1px solid #E5E7EB', padding: '30px 20px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '40px', padding: '0 10px' }}>
+          <div style={{ width: '35px', height: '35px', background: 'linear-gradient(135deg, #4F46E5, #9333EA)', borderRadius: '10px' }}></div>
+          <span style={{ fontWeight: '800', fontSize: '18px', color: '#111827' }}>Chatly Studio</span>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={handleSave} style={{ background: '#7C3AED', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', transition: '0.3s' }}>
-            {navigation.state === "submitting" ? "Saving..." : "Publish Settings"}
-          </button>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', padding: '40px' }}>
         
-        {/* --- LEFT MENU --- */}
-        <div style={{ width: '240px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <TabBtn id="design" active={activeTab} set={setActiveTab} label="Visual Design" icon="🎨" />
-            <TabBtn id="content" active={activeTab} set={setActiveTab} label="Widget Content" icon="✍️" />
-            <TabBtn id="behavior" active={activeTab} set={setActiveTab} label="Behavior" icon="⚙️" />
+        <nav style={{ flex: 1 }}>
+          <NavButton active={activeTab === 'style'} onClick={() => setActiveTab('style')} label="Widget Style" icon="🎨" />
+          <NavButton active={activeTab === 'content'} onClick={() => setActiveTab('content')} label="Translations" icon="🌐" />
+          <NavButton active={activeTab === 'advanced'} onClick={() => setActiveTab('advanced')} label="Advanced" icon="⚡" />
+        </nav>
+
+        <div style={{ background: '#F9FAFB', padding: '15px', borderRadius: '12px', border: '1px solid #F3F4F6' }}>
+          <p style={{ fontSize: '11px', color: '#6B7280', fontWeight: '600' }}>PLAN: PROFESSIONAL</p>
         </div>
-
-        {/* --- CENTER CONFIGURATION --- */}
-        <div style={{ flex: 1, padding: '0 60px' }}>
-          {activeTab === 'design' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-              <Section title="Launcher Identity">
-                 <p style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '16px' }}>Select the icon that represents your brand on the homepage.</p>
-                 <div style={{ display: 'flex', gap: '12px' }}>
-                    {Object.keys(ICON_MAP).map(key => (
-                      <IconBox key={key} active={formState.launcherIcon === key} onClick={() => handleChange('launcherIcon', key)}>
-                        {ICON_MAP[key]}
-                      </IconBox>
-                    ))}
-                 </div>
-              </Section>
-
-              <Section title="Color Palette">
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                  <ColorRow label="Brand Primary" value={formState.primaryColor} onChange={(v) => handleChange('primaryColor', v)} />
-                  <ColorRow label="Header Bar" value={formState.headerBgColor} onChange={(v) => handleChange('headerBgColor', v)} />
-                  <ColorRow label="Welcome Hero" value={formState.heroBgColor} onChange={(v) => handleChange('heroBgColor', v)} />
-                </div>
-              </Section>
-            </div>
-          )}
-
-          {activeTab === 'content' && (
-             <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-               <Section title="Header Details">
-                  <InputRow label="Support Name" value={formState.headerTitle} onChange={(v) => handleChange('headerTitle', v)} />
-                  <InputRow label="Status Text" value={formState.headerSubtitle} onChange={(v) => handleChange('headerSubtitle', v)} />
-               </Section>
-               <Section title="Home Screen Messages">
-                  <InputRow label="Main Headline" value={formState.welcomeText} onChange={(v) => handleChange('welcomeText', v)} />
-                  <TextAreaRow label="Sub-description" value={formState.welcomeSubtext} onChange={(v) => handleChange('welcomeSubtext', v)} />
-                  <InputRow label="Reply Time Label" value={formState.replyTimeText} onChange={(v) => handleChange('replyTimeText', v)} />
-               </Section>
-             </div>
-          )}
-        </div>
-
-        {/* --- RIGHT LIVE MOCKUP --- */}
-        <div style={{ width: '380px' }}>
-           <div style={{ border: '12px solid #1E293B', borderRadius: '40px', height: '640px', background: '#fff', overflow: 'hidden', position: 'relative', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
-              {/* Header */}
-              <div style={{ background: formState.headerBgColor, padding: '24px 20px', color: '#fff', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                 <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `url(${formState.welcomeImg}) center/cover` }}></div>
-                 <div>
-                   <div style={{ fontWeight: '800', fontSize: '16px' }}>{formState.headerTitle}</div>
-                   <div style={{ fontSize: '12px', opacity: 0.8 }}>{formState.headerSubtitle}</div>
-                 </div>
-              </div>
-              {/* Hero */}
-              <div style={{ background: formState.heroBgColor, padding: '40px 20px' }}>
-                 <h2 style={{ margin: 0, color: '#1E293B', fontSize: '24px', fontWeight: '900' }}>{formState.welcomeText}</h2>
-                 <p style={{ color: '#475569', fontSize: '14px', marginTop: '8px' }}>{formState.welcomeSubtext}</p>
-              </div>
-              {/* Action Card */}
-              <div style={{ margin: '20px', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                 <div>
-                    <div style={{ fontWeight: '800', fontSize: '14px', color: '#1E293B' }}>Start conversation</div>
-                    <div style={{ fontSize: '12px', color: '#64748B' }}>{formState.replyTimeText}</div>
-                 </div>
-                 <div style={{ color: formState.primaryColor }}>{ICON_MAP[formState.launcherIcon]}</div>
-              </div>
-              {/* Floating Launcher */}
-              <div style={{ position: 'absolute', bottom: '24px', right: '24px', width: '56px', height: '56px', borderRadius: '18px', background: formState.primaryColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.2)' }}>
-                 {ICON_MAP[formState.launcherIcon]}
-              </div>
-           </div>
-        </div>
-
       </div>
 
-      {toast && <div style={{ position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%)', background: '#10B981', color: 'white', padding: '12px 32px', borderRadius: '12px', fontWeight: 'bold' }}>Success: Settings Live on Store!</div>}
+      {/* --- COLUMN 2: CONFIGURATION --- */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '40px 50px' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+          <div>
+            <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#111827' }}>{activeTab === 'style' ? 'Appearance' : 'Content'}</h1>
+            <p style={{ color: '#6B7280' }}>Customize your store's chat identity.</p>
+          </div>
+          <button 
+            onClick={handleSave} 
+            disabled={navigation.state === "submitting"}
+            style={{ padding: '12px 28px', background: '#111827', color: '#FFF', borderRadius: '10px', fontWeight: '700', border: 'none', cursor: 'pointer', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}
+          >
+            {navigation.state === "submitting" ? "Syncing..." : "Save & Publish"}
+          </button>
+        </header>
+
+        {activeTab === 'style' ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <Card title="Button Icon">
+              <div style={{ display: 'flex', gap: '12px' }}>
+                {Object.keys(ICON_MAP).map(key => (
+                  <IconButton key={key} active={formState.launcherIcon === key} onClick={() => handleChange('launcherIcon', key)}>
+                    {ICON_MAP[key]}
+                  </IconButton>
+                ))}
+              </div>
+            </Card>
+
+            <Card title="Interface Colors">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                <ColorBox label="Primary Color" value={formState.primaryColor} onChange={(v) => handleChange('primaryColor', v)} />
+                <ColorBox label="Header Bar" value={formState.headerBgColor} onChange={(v) => handleChange('headerBgColor', v)} />
+                <ColorBox label="Banner Bg" value={formState.heroBgColor} onChange={(v) => handleChange('heroBgColor', v)} />
+              </div>
+            </Card>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <Card title="Header Content">
+               <Field label="Widget Title" value={formState.headerTitle} onChange={(v) => handleChange('headerTitle', v)} />
+               <Field label="Online Status Text" value={formState.headerSubtitle} onChange={(v) => handleChange('headerSubtitle', v)} />
+            </Card>
+            <Card title="Message Templates">
+               <Field label="Welcome Headline" value={formState.welcomeText} onChange={(v) => handleChange('welcomeText', v)} />
+               <AreaField label="Hero Sub-description" value={formState.welcomeSubtext} onChange={(v) => handleChange('welcomeSubtext', v)} />
+            </Card>
+          </div>
+        )}
+      </div>
+
+      {/* --- COLUMN 3: LIVE PREVIEW --- */}
+      <div style={{ width: '450px', padding: '40px', background: '#FFFFFF', borderLeft: '1px solid #E5E7EB', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ marginBottom: '20px', fontSize: '12px', fontWeight: '800', color: '#9CA3AF', letterSpacing: '1px' }}>STOREFRONT PREVIEW</div>
+          
+          {/* Phone Frame */}
+          <div style={{ width: '340px', height: '600px', background: '#000', borderRadius: '45px', padding: '10px', boxShadow: '0 30px 60px rgba(0,0,0,0.12)', border: '6px solid #1F2937', position: 'relative' }}>
+            <div style={{ width: '100%', height: '100%', background: '#FFF', borderRadius: '35px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                {/* Header Mockup */}
+                <div style={{ background: formState.headerBgColor, padding: '25px 20px', color: '#FFF' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <img src={formState.welcomeImg} style={{ width: '40px', height: '40px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.2)' }} />
+                        <div>
+                            <div style={{ fontWeight: '700', fontSize: '15px' }}>{formState.headerTitle}</div>
+                            <div style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ width: '6px', height: '6px', background: '#10B981', borderRadius: '50%' }}></span> {formState.headerSubtitle}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Body Mockup */}
+                <div style={{ flex: 1, background: '#F9FAFB' }}>
+                    <div style={{ background: formState.heroBgColor, padding: '35px 20px' }}>
+                        <h2 style={{ margin: 0, color: '#111827', fontSize: '22px', fontWeight: '800' }}>{formState.welcomeText}</h2>
+                        <p style={{ fontSize: '13px', color: '#4B5563', marginTop: '8px', lineHeight: '1.5' }}>{formState.welcomeSubtext}</p>
+                    </div>
+                    
+                    <div style={{ margin: '20px', padding: '18px', background: '#FFF', borderRadius: '16px', border: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
+                        <div>
+                            <div style={{ fontSize: '14px', fontWeight: '700', color: '#111827' }}>Send a message</div>
+                            <div style={{ fontSize: '12px', color: '#6B7280' }}>{formState.replyTimeText}</div>
+                        </div>
+                        <div style={{ color: formState.primaryColor }}>{ICON_MAP[formState.launcherIcon]}</div>
+                    </div>
+                </div>
+                
+                {/* Floating Launcher Icon Mockup */}
+                <div style={{ position: 'absolute', bottom: '25px', right: '25px', width: '55px', height: '55px', borderRadius: '18px', background: formState.primaryColor, color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 20px rgba(0,0,0,0.15)' }}>
+                    {ICON_MAP[formState.launcherIcon]}
+                </div>
+            </div>
+          </div>
+      </div>
+
+      {toast && <Toast message="Settings Synced Successfully!" />}
     </div>
   );
 }
 
-// --- REUSABLE UI COMPONENTS ---
+// --- UI COMPONENTS ---
 
-const Section = ({ title, children }) => (
-  <div style={{ background: '#1E293B', padding: '32px', borderRadius: '24px', border: '1px solid #334155' }}>
-    <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '24px', color: '#F8FAFC' }}>{title}</h3>
-    {children}
-  </div>
-);
-
-const TabBtn = ({ id, active, set, label, icon }) => (
-  <div onClick={() => set(id)} style={{ padding: '14px 20px', borderRadius: '12px', cursor: 'pointer', background: active === id ? '#334155' : 'transparent', color: active === id ? '#fff' : '#94A3B8', fontWeight: '600', display: 'flex', gap: '12px', transition: '0.2s' }}>
+const NavButton = ({ active, label, icon, onClick }) => (
+  <div onClick={onClick} style={{ padding: '12px 16px', borderRadius: '10px', cursor: 'pointer', background: active ? '#EEF2FF' : 'transparent', color: active ? '#4F46E5' : '#4B5563', fontWeight: active ? '700' : '500', display: 'flex', gap: '12px', marginBottom: '5px', transition: '0.2s' }}>
     <span>{icon}</span> {label}
   </div>
 );
 
-const IconBox = ({ children, active, onClick }) => (
-  <div onClick={onClick} style={{ width: '60px', height: '60px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: active ? '3px solid #7C3AED' : '1px solid #334155', background: active ? '#7C3AED15' : '#0F172A', color: active ? '#7C3AED' : '#64748B', transition: '0.2s' }}>
+const Card = ({ title, children }) => (
+  <div style={{ background: '#FFF', padding: '24px', borderRadius: '16px', border: '1px solid #E5E7EB' }}>
+    <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#111827', marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{title}</h3>
     {children}
   </div>
 );
 
-const ColorRow = ({ label, value, onChange }) => (
+const IconButton = ({ children, active, onClick }) => (
+  <div onClick={onClick} style={{ width: '56px', height: '56px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: active ? '2px solid #4F46E5' : '1px solid #E5E7EB', background: active ? '#EEF2FF' : '#FFF', color: active ? '#4F46E5' : '#6B7280', transition: '0.2s' }}>
+    {children}
+  </div>
+);
+
+const ColorBox = ({ label, value, onChange }) => (
   <div>
-    <label style={{ display: 'block', fontSize: '13px', color: '#94A3B8', marginBottom: '8px' }}>{label}</label>
-    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: '#0F172A', padding: '8px', borderRadius: '12px', border: '1px solid #334155' }}>
-      <input type="color" value={value} onChange={(e) => onChange(e.target.value)} style={{ background: 'none', border: 'none', width: '30px', height: '30px', cursor: 'pointer' }} />
-      <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{value.toUpperCase()}</span>
+    <label style={{ display: 'block', fontSize: '12px', color: '#6B7280', fontWeight: '600', marginBottom: '8px' }}>{label}</label>
+    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: '#F9FAFB', padding: '8px', borderRadius: '10px', border: '1px solid #E5E7EB' }}>
+      <input type="color" value={value} onChange={(e) => onChange(e.target.value)} style={{ border: 'none', background: 'none', width: '25px', height: '25px', cursor: 'pointer' }} />
+      <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#111827' }}>{value.toUpperCase()}</span>
     </div>
   </div>
 );
 
-const InputRow = ({ label, value, onChange }) => (
-  <div style={{ marginBottom: '16px' }}>
-    <label style={{ display: 'block', fontSize: '13px', color: '#94A3B8', marginBottom: '8px' }}>{label}</label>
-    <input type="text" value={value} onChange={(e) => onChange(e.target.value)} style={{ width: '100%', background: '#0F172A', border: '1px solid #334155', padding: '12px', borderRadius: '12px', color: '#fff' }} />
+const Field = ({ label, value, onChange }) => (
+  <div style={{ marginBottom: '15px' }}>
+    <label style={{ display: 'block', fontSize: '12px', color: '#6B7280', fontWeight: '600', marginBottom: '8px' }}>{label}</label>
+    <input type="text" value={value} onChange={(e) => onChange(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #E5E7EB', outline: 'none', fontSize: '14px' }} />
   </div>
 );
 
-const TextAreaRow = ({ label, value, onChange }) => (
-  <div style={{ marginBottom: '16px' }}>
-    <label style={{ display: 'block', fontSize: '13px', color: '#94A3B8', marginBottom: '8px' }}>{label}</label>
-    <textarea value={value} onChange={(e) => onChange(e.target.value)} style={{ width: '100%', background: '#0F172A', border: '1px solid #334155', padding: '12px', borderRadius: '12px', color: '#fff', minHeight: '80px', resize: 'none' }} />
+const AreaField = ({ label, value, onChange }) => (
+  <div style={{ marginBottom: '15px' }}>
+    <label style={{ display: 'block', fontSize: '12px', color: '#6B7280', fontWeight: '600', marginBottom: '8px' }}>{label}</label>
+    <textarea value={value} onChange={(e) => onChange(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #E5E7EB', outline: 'none', fontSize: '14px', minHeight: '80px', resize: 'none' }} />
+  </div>
+);
+
+const Toast = ({ message }) => (
+  <div style={{ position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%)', background: '#111827', color: '#FFF', padding: '12px 24px', borderRadius: '50px', fontWeight: '600', boxShadow: '0 10px 20px rgba(0,0,0,0.2)', animation: 'slideUp 0.3s forwards' }}>
+    ✅ {message}
+    <style>{`@keyframes slideUp { from { bottom: -50px; } to { bottom: 30px; } }`}</style>
   </div>
 );
