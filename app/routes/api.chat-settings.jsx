@@ -45,11 +45,24 @@ export const loader = async ({ request }) => {
 };
 
 export const action = async ({ request }) => {
-  return json({}, {
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
+  const { session } = await authenticate.admin(request);
+  const formData = await request.formData();
+  const data = Object.fromEntries(formData);
+
+  // Ensure shop is always set correctly from the session
+  const shop = session.shop;
+
+  await db.chatSettings.upsert({
+    where: { shop: shop },
+    update: { 
+      ...data, 
+      shop: shop // prevent accidental shop change
+    },
+    create: { 
+      ...data, 
+      shop: shop 
     },
   });
+
+  return json({ success: true });
 };

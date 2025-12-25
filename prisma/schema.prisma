@@ -61,11 +61,13 @@ model ChatSettings {
   shop                  String   @unique
   primaryColor          String   @default("#6366f1")
   headerBgColor         String   @default("#384959")
+  heroBgColor           String   @default("#bdddfc")    // Add this
   welcomeImg            String   @default("https://ui-avatars.com/api/?name=Support")
   headerTitle           String   @default("Live Support")
   headerSubtitle        String   @default("Online now")
   welcomeText           String   @default("Hi there 👋")
   welcomeSubtext        String   @default("We are here to help you!")
+  replyTimeText         String   @default("Typically replies in 5 minutes") // Add this
   startConversationText String   @default("Start a conversation")
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
