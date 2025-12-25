@@ -98,16 +98,19 @@ export default function NeuralChatAdmin() {
   };
 
   // Logic to handle file selection
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+const handleFileChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    // Note: For a real production app, you would upload this file to S3/Cloudinary
-    // and get a URL. For now, we simulate the text.
-    const mockUrl = "https://via.placeholder.com/150"; // Replace with real upload logic
-    handleReply(`Sent a file: ${file.name}`, mockUrl);
+  const reader = new FileReader();
+  reader.onloadend = () => {
+    const base64String = reader.result;
+    // We send the actual image data as the URL for now
+    handleReply(`Sent an image: ${file.name}`, base64String);
   };
-
+  
+  reader.readAsDataURL(file); // This converts image to a string that <img> can read
+};
   const handleReply = (text = null, fileUrl = null) => {
     const finalMsg = text || reply;
     if (!finalMsg.trim() && !fileUrl || !activeSession) return;
@@ -199,27 +202,55 @@ export default function NeuralChatAdmin() {
             </div>
 
             <div ref={scrollRef} style={{ flex: '1', padding: '40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {messages.map((msg, i) => (
-                <div key={i} style={{ alignSelf: msg.sender === 'admin' ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
-                  <div style={{ 
-                    padding: '16px 24px', borderRadius: msg.sender === 'admin' ? '25px 25px 4px 25px' : '25px 25px 25px 4px',
-                    fontSize: '15px', lineHeight: '1.6',
-                    background: msg.sender === 'admin' ? accentColor : 'white',
-                    color: msg.sender === 'admin' ? 'white' : '#433d3c',
-                    boxShadow: msg.sender === 'admin' ? `0 10px 20px ${accentColor}25` : '0 4px 15px rgba(0,0,0,0.03)',
-                    border: msg.sender === 'admin' ? 'none' : '1px solid #f1ece4'
-                  }}>
-                    {msg.message}
-                    {msg.fileUrl && (
-                      <div style={{ marginTop: '10px', borderTop: msg.sender === 'admin' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #eee', paddingTop: '8px' }}>
-                         <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer" style={{ color: msg.sender === 'admin' ? 'white' : accentColor, fontWeight: '800', fontSize: '12px', textDecoration: 'none' }}>
-                            View Attachment 📎
-                         </a>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+           {messages.map((msg, i) => {
+  // Check if the file is an image or SVG
+  const isImage = msg.fileUrl && (
+    msg.fileUrl.match(/\.(jpeg|jpg|gif|png|svg)$/) != null || 
+    msg.fileUrl.startsWith('data:image') // Handle base64/blob previews
+  );
+
+  return (
+    <div key={i} style={{ alignSelf: msg.sender === 'admin' ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
+      <div style={{ 
+        padding: '16px 24px', borderRadius: msg.sender === 'admin' ? '25px 25px 4px 25px' : '25px 25px 25px 4px',
+        fontSize: '15px', lineHeight: '1.6',
+        background: msg.sender === 'admin' ? accentColor : 'white',
+        color: msg.sender === 'admin' ? 'white' : '#433d3c',
+        boxShadow: msg.sender === 'admin' ? `0 10px 20px ${accentColor}25` : '0 4px 15px rgba(0,0,0,0.03)',
+        border: msg.sender === 'admin' ? 'none' : '1px solid #f1ece4'
+      }}>
+        {/* Render Text Message */}
+        {msg.message}
+
+        {/* Render Image Preview if file exists */}
+        {msg.fileUrl && (
+          <div style={{ marginTop: '12px' }}>
+            {isImage ? (
+              <a href={msg.fileUrl} target="_blank" rel="noreferrer">
+                <img 
+                  src={msg.fileUrl} 
+                  alt="attachment" 
+                  style={{ 
+                    maxWidth: '100%', 
+                    maxHeight: '200px', 
+                    borderRadius: '12px', 
+                    display: 'block',
+                    border: '1px solid rgba(0,0,0,0.1)' 
+                  }} 
+                />
+              </a>
+            ) : (
+              /* Fallback for non-image files like PDF */
+              <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer" style={{ color: msg.sender === 'admin' ? 'white' : accentColor, fontWeight: '800', fontSize: '12px', textDecoration: 'none' }}>
+                View Document 📎
+              </a>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+})}
             </div>
 
             <div style={{ padding: '30px 40px',  borderTop: '1px solid  rgb(253, 250, 245)' }}>
