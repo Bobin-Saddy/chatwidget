@@ -172,28 +172,40 @@
   const chatInput = document.getElementById("chat-input");
   const fileInput = document.getElementById("chat-file-input");
 
-  async function fetchAndApplySettings() {
-    try {
-      const response = await fetch(`${BASE_URL}/api/chat-settings?shop=${shop}`);
-      if (!response.ok) return;
-      const s = await response.json();
-      if (s) {
-        document.documentElement.style.setProperty('--chat-primary', s.primaryColor);
-        launcher.style.background = s.primaryColor;
-        document.getElementById("chat-header").style.background = s.headerBgColor;
-        document.getElementById("chat-nav").style.background = s.headerBgColor;
-        document.getElementById("chat-submit-info").style.background = s.headerBgColor;
-        document.getElementById("start-chat-trigger").style.borderColor = s.headerBgColor;
-        document.getElementById("chat-send").style.background = s.primaryColor;
-        if(s.welcomeImg) document.getElementById("main-support-avatar").src = s.welcomeImg;
-        document.getElementById("header-title-text").innerText = s.headerTitle;
-        document.getElementById("header-subtitle-text").innerHTML = `<span class="pulse"></span> ${s.headerSubtitle}`;
-        document.getElementById("welcome-h1").innerText = s.welcomeText;
-        document.getElementById("welcome-p").innerText = s.welcomeSubtext;
-        document.getElementById("onboarding-title").innerText = s.startConversationText;
-      }
-    } catch (e) { console.error("Failed to load settings"); }
-  }
+async function fetchAndApplySettings() {
+  try {
+    const response = await fetch(`${BASE_URL}/api/chat-settings?shop=${shop}`);
+    if (!response.ok) return;
+    const s = await response.json();
+    if (s) {
+      // 1. Update Primary Colors
+      document.documentElement.style.setProperty('--chat-primary', s.primaryColor);
+      launcher.style.background = s.primaryColor;
+      document.getElementById("chat-send").style.background = s.primaryColor;
+      
+      // 2. Update Header & Nav Colors
+      const header = document.getElementById("chat-header");
+      header.style.background = s.headerBgColor;
+      document.getElementById("chat-nav").style.background = s.headerBgColor;
+      document.getElementById("chat-submit-info").style.background = s.headerBgColor;
+      document.getElementById("start-chat-trigger").style.borderColor = s.headerBgColor;
+
+      // 3. Update Hero Section
+      const hero = document.getElementById("home-hero-bg");
+      hero.style.background = s.heroBgColor; // Apply new hero bg color
+
+      // 4. Update Dynamic Text
+      document.getElementById("header-title-text").innerText = s.headerTitle;
+      document.getElementById("header-subtitle-text").innerHTML = `<span class="pulse"></span> ${s.headerSubtitle}`;
+      document.getElementById("card-reply-time").innerText = s.replyTimeText; // New
+      document.getElementById("welcome-h1").innerText = s.welcomeText;
+      document.getElementById("welcome-p").innerText = s.welcomeSubtext;
+      
+      // 5. Update Avatar
+      if(s.welcomeImg) document.getElementById("main-support-avatar").src = s.welcomeImg;
+    }
+  } catch (e) { console.error("Failed to load settings"); }
+}
   fetchAndApplySettings();
 
   function switchTab(tabId) {
