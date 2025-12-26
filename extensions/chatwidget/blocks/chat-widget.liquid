@@ -181,6 +181,33 @@
       if (!response.ok) return;
       const s = await response.json();
       if (s) {
+        // --- 1. NEW: TYPOGRAPHY & FONT SCALING ---
+        if (s.fontFamily) {
+          // Apply font family to the widget container
+          widget.style.setProperty('--chat-font-family', s.fontFamily);
+          widget.style.fontFamily = s.fontFamily;
+
+          // If it's a Google Font (not a system default), load it dynamically
+          if (!s.fontFamily.includes("-apple-system") && !s.fontFamily.includes("system-ui")) {
+            const fontName = s.fontFamily.split(',')[0].replace(/['"]/g, '');
+            if (!document.getElementById(`font-${fontName}`)) {
+              const link = document.createElement('link');
+              link.id = `font-${fontName}`;
+              link.rel = 'stylesheet';
+              link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/\s+/g, '+')}:wght@400;700&display=swap`;
+              document.head.appendChild(link);
+            }
+          }
+        }
+
+        if (s.baseFontSize) {
+          // Set base size variable (ensure CSS uses calc() or em based on this)
+          document.documentElement.style.setProperty('--chat-base-size', s.baseFontSize);
+          // Fallback for elements not using variables yet:
+          widget.style.fontSize = s.baseFontSize;
+        }
+
+        // --- 2. EXISTING COLOR LOGIC ---
         document.documentElement.style.setProperty('--chat-primary', s.primaryColor);
         launcher.style.background = s.primaryColor;
         document.getElementById("chat-send").style.background = s.primaryColor;
@@ -217,6 +244,7 @@
 
         if (s.welcomeImg) document.getElementById("main-support-avatar").src = s.welcomeImg;
 
+        // --- 3. EXISTING TEXT CONTENT LOGIC ---
         document.getElementById("header-title-text").innerText = s.headerTitle;
         document.getElementById("welcome-h1").innerText = s.welcomeText;
         document.getElementById("welcome-p").innerText = s.welcomeSubtext;
@@ -226,6 +254,8 @@
     } catch (e) { console.error("Sync failed", e); }
   }
 
+  // ... (Keep rest of your switchTab, launcher, message loading, and handleSend logic exactly as is)
+  
   fetchAndApplySettings();
 
   function switchTab(tabId) {
