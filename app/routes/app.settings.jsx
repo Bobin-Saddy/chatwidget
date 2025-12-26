@@ -1,5 +1,5 @@
 import { json } from "@remix-run/node";
-import { useLoaderData, useSubmit, useNavigation, useActionData } from "react-router"; // Fixed import to @remix-run/react
+import { useLoaderData, useSubmit, useNavigation, useActionData } from "react-router";
 import { useState, useEffect } from "react";
 import { authenticate } from "../shopify.server";
 import { db } from "../db.server";
@@ -21,11 +21,11 @@ export const loader = async ({ request }) => {
     heroBgColor: "#bdddfc",
     headerTextColor: "#bdddfc",
     heroTextColor: "#384959",
-    cardTitleColor: "#384959", // New
-    cardSubtitleColor: "#64748b", // New
-    onboardingTextColor: "#384959", // New
+    cardTitleColor: "#384959",
+    cardSubtitleColor: "#64748b",
+    onboardingTextColor: "#384959",
     launcherIcon: "bubble",
-    welcomeImg: "https://ui-avatars.com/api/?name=Support&background=fff&color=4F46E5",
+    welcomeImg: "https://ui-avatars.com/api/?name=Support&background=fff&color=4F46E5", // Default
     headerTitle: "Live Support",
     headerSubtitle: "Online now",
     welcomeText: "Hi there 👋",
@@ -101,8 +101,14 @@ export default function UltimateSettings() {
               </div>
             </Card>
 
-            <Card title="Core Branding">
-               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+            <Card title="Brand Assets">
+               <Field 
+                  label="Support Avatar URL" 
+                  value={formState.welcomeImg} 
+                  onChange={(v) => handleChange('welcomeImg', v)} 
+                  placeholder="https://example.com/image.png"
+               />
+               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginTop: '20px' }}>
                 <ColorBox label="Primary Color" value={formState.primaryColor} onChange={(v) => handleChange('primaryColor', v)} />
                 <ColorBox label="Header BG" value={formState.headerBgColor} onChange={(v) => handleChange('headerBgColor', v)} />
                 <ColorBox label="Banner BG" value={formState.heroBgColor} onChange={(v) => handleChange('heroBgColor', v)} />
@@ -142,7 +148,11 @@ export default function UltimateSettings() {
             {/* Header */}
             <div style={{ background: formState.headerBgColor, padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <img src={formState.welcomeImg} style={{ width: '40px', height: '40px', borderRadius: '12px' }} alt="avatar" />
+                    <img 
+                      src={formState.welcomeImg || "https://ui-avatars.com/api/?name=S"} 
+                      style={{ width: '40px', height: '40px', borderRadius: '12px', objectFit: 'cover', background: '#eee' }} 
+                      alt="avatar" 
+                    />
                     <div>
                         <div style={{ fontWeight: '700', color: formState.headerTextColor, fontSize: '15px' }}>{formState.headerTitle}</div>
                         <div style={{ fontSize: '12px', color: formState.headerTextColor, opacity: 0.8 }}>{formState.headerSubtitle}</div>
@@ -192,7 +202,7 @@ export default function UltimateSettings() {
   );
 }
 
-// Sub-components (ColorBox, Field, etc. remain the same as your previous working version)
+// Sub-components
 const NavButton = ({ active, label, icon, onClick }) => (
     <div onClick={onClick} style={{ padding: '12px 16px', borderRadius: '10px', cursor: 'pointer', background: active ? '#EEF2FF' : 'transparent', color: active ? '#4F46E5' : '#4B5563', fontWeight: active ? '700' : '500', display: 'flex', gap: '12px', marginBottom: '5px' }}>
       <span>{icon}</span> {label}
@@ -218,10 +228,16 @@ const ColorBox = ({ label, value, onChange }) => (
       </div>
     </div>
 );
-const Field = ({ label, value, onChange }) => (
+const Field = ({ label, value, onChange, placeholder }) => (
     <div style={{ marginBottom: '15px' }}>
       <label style={{ display: 'block', fontSize: '12px', color: '#6B7280', fontWeight: '600', marginBottom: '8px' }}>{label}</label>
-      <input type="text" value={value} onChange={(e) => onChange(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #E5E7EB', fontSize: '14px' }} />
+      <input 
+        type="text" 
+        value={value} 
+        onChange={(e) => onChange(e.target.value)} 
+        placeholder={placeholder}
+        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #E5E7EB', fontSize: '14px' }} 
+      />
     </div>
 );
 const AreaField = ({ label, value, onChange }) => (
