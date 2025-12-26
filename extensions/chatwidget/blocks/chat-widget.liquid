@@ -178,12 +178,25 @@ async function fetchAndApplySettings() {
     if (!response.ok) return;
     const s = await response.json();
     if (s) {
-      // Color Updates
+      // 1. BACKGROUND COLORS
       launcher.style.background = s.primaryColor;
       document.getElementById("chat-header").style.background = s.headerBgColor;
       document.getElementById("home-hero-bg").style.background = s.heroBgColor;
+      document.getElementById("chat-nav").style.background = s.headerBgColor; // Matches nav to header
       
-      // Icon Update
+      // 2. TEXT COLORS (The missing part)
+      // Header Text
+      document.getElementById("header-title-text").style.color = s.headerTextColor;
+      document.getElementById("header-subtitle-text").style.color = s.headerTextColor;
+      
+      // Hero/Banner Text
+      document.getElementById("welcome-h1").style.color = s.heroTextColor;
+      document.getElementById("welcome-p").style.color = s.heroTextColor;
+      
+      // Card Text (optional, usually looks best matching header or hero)
+      document.getElementById("card-msg-text").style.color = s.headerBgColor;
+      
+      // 3. ICON UPDATE
       const iconContainer = document.getElementById("launcher-icon");
       const iconPaths = {
         bubble: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`,
@@ -196,12 +209,19 @@ async function fetchAndApplySettings() {
         iconContainer.innerHTML = iconPaths[s.launcherIcon];
       }
       
-      // Text Updates
+      // 4. CONTENT UPDATES
       document.getElementById("header-title-text").innerText = s.headerTitle;
+      document.getElementById("header-subtitle-text").innerHTML = `<span class="pulse"></span> ${s.headerSubtitle}`;
+      document.getElementById("card-msg-text").innerText = s.startConversationText || "Send us a message";
       document.getElementById("card-reply-time").innerText = s.replyTimeText;
+      document.getElementById("welcome-h1").innerText = s.welcomeText;
       document.getElementById("welcome-p").innerText = s.welcomeSubtext;
+
+      // Update CSS Variables for dynamic elements (like user message bubbles)
+      document.documentElement.style.setProperty('--chat-primary', s.primaryColor);
+
     }
-  } catch (e) { console.error("Failed to load settings"); }
+  } catch (e) { console.error("Failed to load settings", e); }
 }
   fetchAndApplySettings();
 
