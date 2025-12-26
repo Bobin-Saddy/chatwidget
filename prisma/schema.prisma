@@ -62,14 +62,18 @@ model ChatSettings {
   primaryColor          String   @default("#4F46E5")
   headerBgColor         String   @default("#111827")
   heroBgColor           String   @default("#EEF2FF")
-  headerTextColor       String   @default("#FFFFFF") // New
-  heroTextColor         String   @default("#111827") // New
+  headerTextColor       String   @default("#FFFFFF")
+  heroTextColor         String   @default("#111827")
   welcomeImg            String   @default("https://ui-avatars.com/api/?name=Support&background=4F46E5&color=fff")
   headerTitle           String   @default("Customer Care")
   headerSubtitle        String   @default("Online & Ready")
   welcomeText           String   @default("How can we help?")
   welcomeSubtext        String   @default("Our team typically responds in under 5 minutes.")
   replyTimeText         String   @default("Replies instantly")
+  
+  // THIS WAS MISSING
+  startConversationText String   @default("Send us a message") 
+  
   launcherIcon          String   @default("bubble")
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
