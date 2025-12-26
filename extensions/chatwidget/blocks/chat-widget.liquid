@@ -179,13 +179,22 @@
   const chatInput = document.getElementById("chat-input");
   const msgBox = document.getElementById("chat-messages");
 
-  async function fetchAndApplySettings() {
+async function fetchAndApplySettings() {
+    // 1. Icons mapping define karein taaki database string SVG mein badal sake
+    const ICON_MAP = {
+      bubble: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`,
+      support: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
+      sparkle: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>`,
+      send: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>`
+    };
+
     try {
       const response = await fetch(`${BASE_URL}/api/chat-settings?shop=${shop}`);
       if (!response.ok) return;
       const s = await response.json();
       
       if (s) {
+        // --- 2. DYNAMIC FONT LOADING ---
         if (s.fontFamily) {
           document.documentElement.style.setProperty('--chat-font-family', s.fontFamily);
           if (!s.fontFamily.includes("-apple-system") && !s.fontFamily.includes("system-ui")) {
@@ -201,26 +210,38 @@
           }
         }
 
+        // --- 3. DYNAMIC FONT SIZE ---
         if (s.baseFontSize) {
           document.documentElement.style.setProperty('--chat-base-size', s.baseFontSize);
         }
 
+        // --- 4. COLOR SYNC ---
         document.documentElement.style.setProperty('--chat-primary', s.primaryColor);
         launcher.style.background = s.primaryColor;
         document.getElementById("chat-header").style.background = s.headerBgColor || s.primaryColor;
-        document.getElementById("chat-nav").style.background = "#ffffff";
         document.getElementById("home-hero-bg").style.background = s.heroBgColor || s.primaryColor;
         document.getElementById("chat-send").style.background = s.primaryColor;
         document.getElementById("chat-submit-info").style.background = s.primaryColor;
 
+        // --- 5. ICON SYNC (Fix for your issue) ---
+        if (s.launcherIcon && ICON_MAP[s.launcherIcon]) {
+          document.getElementById("launcher-icon").innerHTML = ICON_MAP[s.launcherIcon];
+        }
+
+        // --- 6. TEXT CONTENT SYNC ---
         document.getElementById("header-title-text").innerText = s.headerTitle;
         document.getElementById("welcome-h1").innerText = s.welcomeText;
         document.getElementById("welcome-p").innerText = s.welcomeSubtext;
         document.getElementById("card-msg-text").innerText = s.startConversationText;
         document.getElementById("card-reply-time").innerText = s.replyTimeText;
-        if(s.welcomeImg) document.getElementById("main-support-avatar").src = s.welcomeImg;
+        
+        if(s.welcomeImg) {
+          document.getElementById("main-support-avatar").src = s.welcomeImg;
+        }
       }
-    } catch (e) { console.error("Sync failed", e); }
+    } catch (e) { 
+      console.error("Sync failed", e); 
+    }
   }
 
   function switchTab(tabId) {
