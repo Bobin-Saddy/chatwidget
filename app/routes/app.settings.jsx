@@ -1,10 +1,9 @@
 import { json } from "@remix-run/node";
-import { useLoaderData, useSubmit, useNavigation, useActionData } from "react-router";
+import { useLoaderData, useSubmit, useNavigation, useActionData } from "@remix-run/react";
 import { useState, useEffect } from "react";
 import { authenticate } from "../shopify.server";
 import { db } from "../db.server";
 
-// --- PREMIUM SVG ICONSET ---
 const ICON_MAP = {
   bubble: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
   support: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
@@ -15,10 +14,13 @@ const ICON_MAP = {
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
   const settings = await db.chatSettings.findUnique({ where: { shop: session.shop } });
+  
   return json(settings || {
     primaryColor: "#4F46E5",
     headerBgColor: "#111827",
     heroBgColor: "#EEF2FF",
+    headerTextColor: "#FFFFFF",
+    heroTextColor: "#111827",
     launcherIcon: "bubble",
     welcomeImg: "https://ui-avatars.com/api/?name=Support&background=4F46E5&color=fff",
     headerTitle: "Customer Care",
@@ -33,6 +35,7 @@ export const action = async ({ request }) => {
   const { session } = await authenticate.admin(request);
   const formData = await request.formData();
   const data = Object.fromEntries(formData);
+  
   await db.chatSettings.upsert({
     where: { shop: session.shop },
     update: { ...data, shop: session.shop },
@@ -59,7 +62,7 @@ export default function UltimateSettings() {
     <div style={{ background: '#F3F4F6', minHeight: '100vh', display: 'flex', fontFamily: 'Inter, sans-serif' }}>
       
       {/* --- COLUMN 1: NAVIGATION --- */}
-      <div style={{ width: '260px', background: '#FFFFFF', borderRight: '1px solid #E5E7EB', padding: '30px 20px', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ width: '260px', background: '#FFFFFF', borderRight: '1px solid #E5E7EB', padding: '30px 20px', display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '40px', padding: '0 10px' }}>
           <div style={{ width: '35px', height: '35px', background: 'linear-gradient(135deg, #4F46E5, #9333EA)', borderRadius: '10px' }}></div>
           <span style={{ fontWeight: '800', fontSize: '18px', color: '#111827' }}>Chatly Studio</span>
@@ -68,20 +71,19 @@ export default function UltimateSettings() {
         <nav style={{ flex: 1 }}>
           <NavButton active={activeTab === 'style'} onClick={() => setActiveTab('style')} label="Widget Style" icon="🎨" />
           <NavButton active={activeTab === 'content'} onClick={() => setActiveTab('content')} label="Translations" icon="🌐" />
-          <NavButton active={activeTab === 'advanced'} onClick={() => setActiveTab('advanced')} label="Advanced" icon="⚡" />
         </nav>
 
         <div style={{ background: '#F9FAFB', padding: '15px', borderRadius: '12px', border: '1px solid #F3F4F6' }}>
-          <p style={{ fontSize: '11px', color: '#6B7280', fontWeight: '600' }}>PLAN: PROFESSIONAL</p>
+          <p style={{ fontSize: '11px', color: '#6B7280', fontWeight: '600', margin: 0 }}>PLAN: PROFESSIONAL</p>
         </div>
       </div>
 
       {/* --- COLUMN 2: CONFIGURATION --- */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '40px 50px' }}>
+      <div style={{ flex: 1, padding: '40px 50px' }}>
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
           <div>
-            <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#111827' }}>{activeTab === 'style' ? 'Appearance' : 'Content'}</h1>
-            <p style={{ color: '#6B7280' }}>Customize your store's chat identity.</p>
+            <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#111827', margin: 0 }}>{activeTab === 'style' ? 'Appearance' : 'Content'}</h1>
+            <p style={{ color: '#6B7280', margin: '4px 0 0 0' }}>Customize your store's chat identity.</p>
           </div>
           <button 
             onClick={handleSave} 
@@ -105,10 +107,12 @@ export default function UltimateSettings() {
             </Card>
 
             <Card title="Interface Colors">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-                <ColorBox label="Primary Color" value={formState.primaryColor} onChange={(v) => handleChange('primaryColor', v)} />
-                <ColorBox label="Header Bar" value={formState.headerBgColor} onChange={(v) => handleChange('headerBgColor', v)} />
-                <ColorBox label="Banner Bg" value={formState.heroBgColor} onChange={(v) => handleChange('heroBgColor', v)} />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
+                <ColorBox label="Brand Primary" value={formState.primaryColor} onChange={(v) => handleChange('primaryColor', v)} />
+                <ColorBox label="Header Background" value={formState.headerBgColor} onChange={(v) => handleChange('headerBgColor', v)} />
+                <ColorBox label="Header Text Color" value={formState.headerTextColor} onChange={(v) => handleChange('headerTextColor', v)} />
+                <ColorBox label="Banner Background" value={formState.heroBgColor} onChange={(v) => handleChange('heroBgColor', v)} />
+                <ColorBox label="Banner Text Color" value={formState.heroTextColor} onChange={(v) => handleChange('heroTextColor', v)} />
               </div>
             </Card>
           </div>
@@ -121,25 +125,25 @@ export default function UltimateSettings() {
             <Card title="Message Templates">
                <Field label="Welcome Headline" value={formState.welcomeText} onChange={(v) => handleChange('welcomeText', v)} />
                <AreaField label="Hero Sub-description" value={formState.welcomeSubtext} onChange={(v) => handleChange('welcomeSubtext', v)} />
+               <Field label="Reply Time Label" value={formState.replyTimeText} onChange={(v) => handleChange('replyTimeText', v)} />
             </Card>
           </div>
         )}
       </div>
 
       {/* --- COLUMN 3: LIVE PREVIEW --- */}
-      <div style={{ width: '450px', padding: '40px', background: '#FFFFFF', borderLeft: '1px solid #E5E7EB', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{ width: '450px', padding: '40px', background: '#FFFFFF', borderLeft: '1px solid #E5E7EB', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'sticky', top: 0, height: '100vh' }}>
           <div style={{ marginBottom: '20px', fontSize: '12px', fontWeight: '800', color: '#9CA3AF', letterSpacing: '1px' }}>STOREFRONT PREVIEW</div>
           
-          {/* Phone Frame */}
           <div style={{ width: '340px', height: '600px', background: '#000', borderRadius: '45px', padding: '10px', boxShadow: '0 30px 60px rgba(0,0,0,0.12)', border: '6px solid #1F2937', position: 'relative' }}>
             <div style={{ width: '100%', height: '100%', background: '#FFF', borderRadius: '35px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 {/* Header Mockup */}
-                <div style={{ background: formState.headerBgColor, padding: '25px 20px', color: '#FFF' }}>
+                <div style={{ background: formState.headerBgColor, padding: '25px 20px', color: formState.headerTextColor }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <img src={formState.welcomeImg} style={{ width: '40px', height: '40px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.2)' }} />
+                        <img src={formState.welcomeImg} style={{ width: '40px', height: '40px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.2)' }} alt="Avatar" />
                         <div>
                             <div style={{ fontWeight: '700', fontSize: '15px' }}>{formState.headerTitle}</div>
-                            <div style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <div style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', opacity: 0.9 }}>
                                 <span style={{ width: '6px', height: '6px', background: '#10B981', borderRadius: '50%' }}></span> {formState.headerSubtitle}
                             </div>
                         </div>
@@ -148,9 +152,9 @@ export default function UltimateSettings() {
 
                 {/* Body Mockup */}
                 <div style={{ flex: 1, background: '#F9FAFB' }}>
-                    <div style={{ background: formState.heroBgColor, padding: '35px 20px' }}>
-                        <h2 style={{ margin: 0, color: '#111827', fontSize: '22px', fontWeight: '800' }}>{formState.welcomeText}</h2>
-                        <p style={{ fontSize: '13px', color: '#4B5563', marginTop: '8px', lineHeight: '1.5' }}>{formState.welcomeSubtext}</p>
+                    <div style={{ background: formState.heroBgColor, padding: '35px 20px', color: formState.heroTextColor }}>
+                        <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '800', color: 'inherit' }}>{formState.welcomeText}</h2>
+                        <p style={{ fontSize: '13px', marginTop: '8px', lineHeight: '1.5', color: 'inherit', opacity: 0.8 }}>{formState.welcomeSubtext}</p>
                     </div>
                     
                     <div style={{ margin: '20px', padding: '18px', background: '#FFF', borderRadius: '16px', border: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
@@ -175,7 +179,7 @@ export default function UltimateSettings() {
   );
 }
 
-// --- UI COMPONENTS ---
+// --- SUB-COMPONENTS ---
 
 const NavButton = ({ active, label, icon, onClick }) => (
   <div onClick={onClick} style={{ padding: '12px 16px', borderRadius: '10px', cursor: 'pointer', background: active ? '#EEF2FF' : 'transparent', color: active ? '#4F46E5' : '#4B5563', fontWeight: active ? '700' : '500', display: 'flex', gap: '12px', marginBottom: '5px', transition: '0.2s' }}>
@@ -221,8 +225,7 @@ const AreaField = ({ label, value, onChange }) => (
 );
 
 const Toast = ({ message }) => (
-  <div style={{ position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%)', background: '#111827', color: '#FFF', padding: '12px 24px', borderRadius: '50px', fontWeight: '600', boxShadow: '0 10px 20px rgba(0,0,0,0.2)', animation: 'slideUp 0.3s forwards' }}>
+  <div style={{ position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%)', background: '#111827', color: '#FFF', padding: '12px 24px', borderRadius: '50px', fontWeight: '600', boxShadow: '0 10px 20px rgba(0,0,0,0.2)', zIndex: 1000 }}>
     ✅ {message}
-    <style>{`@keyframes slideUp { from { bottom: -50px; } to { bottom: 30px; } }`}</style>
   </div>
 );
