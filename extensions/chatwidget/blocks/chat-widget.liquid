@@ -180,7 +180,6 @@
   const msgBox = document.getElementById("chat-messages");
 
 async function fetchAndApplySettings() {
-    // 1. Icons mapping define karein taaki database string SVG mein badal sake
     const ICON_MAP = {
       bubble: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`,
       support: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
@@ -194,7 +193,7 @@ async function fetchAndApplySettings() {
       const s = await response.json();
       
       if (s) {
-        // --- 2. DYNAMIC FONT LOADING ---
+        // --- 1. FONTS & SIZE ---
         if (s.fontFamily) {
           document.documentElement.style.setProperty('--chat-font-family', s.fontFamily);
           if (!s.fontFamily.includes("-apple-system") && !s.fontFamily.includes("system-ui")) {
@@ -209,39 +208,57 @@ async function fetchAndApplySettings() {
             }
           }
         }
-
-        // --- 3. DYNAMIC FONT SIZE ---
         if (s.baseFontSize) {
           document.documentElement.style.setProperty('--chat-base-size', s.baseFontSize);
         }
 
-        // --- 4. COLOR SYNC ---
+        // --- 2. BACKGROUND COLORS SYNC ---
         document.documentElement.style.setProperty('--chat-primary', s.primaryColor);
         launcher.style.background = s.primaryColor;
-        document.getElementById("chat-header").style.background = s.headerBgColor || s.primaryColor;
-        document.getElementById("home-hero-bg").style.background = s.heroBgColor || s.primaryColor;
+        document.getElementById("chat-header").style.background = s.headerBgColor;
+        document.getElementById("home-hero-bg").style.background = s.heroBgColor;
         document.getElementById("chat-send").style.background = s.primaryColor;
         document.getElementById("chat-submit-info").style.background = s.primaryColor;
 
-        // --- 5. ICON SYNC (Fix for your issue) ---
+        // --- 3. TEXT COLORS SYNC (Naya Logic) ---
+        // Header Text
+        const headerTitle = document.getElementById("header-title-text");
+        const headerSub = document.getElementById("header-subtitle-text");
+        if(headerTitle) headerTitle.style.color = s.headerTextColor;
+        if(headerSub) headerSub.style.color = s.headerTextColor;
+
+        // Hero/Banner Text
+        const welcomeH1 = document.getElementById("welcome-h1");
+        const welcomeP = document.getElementById("welcome-p");
+        if(welcomeH1) welcomeH1.style.color = s.heroTextColor;
+        if(welcomeP) welcomeP.style.color = s.heroTextColor;
+
+        // Action Card (Send us a message)
+        const cardTitle = document.getElementById("card-msg-text");
+        const cardSub = document.getElementById("card-reply-time");
+        if(cardTitle) cardTitle.style.color = s.cardTitleColor;
+        if(cardSub) cardSub.style.color = s.cardSubtitleColor;
+
+        // Onboarding Text (Start a conversation)
+        const onboardingTitle = document.getElementById("onboarding-title");
+        const onboardingP = document.getElementById("onboarding-p");
+        if(onboardingTitle) onboardingTitle.style.color = s.onboardingTextColor;
+        if(onboardingP) onboardingP.style.color = s.onboardingTextColor;
+
+        // --- 4. ICON SYNC ---
         if (s.launcherIcon && ICON_MAP[s.launcherIcon]) {
           document.getElementById("launcher-icon").innerHTML = ICON_MAP[s.launcherIcon];
         }
 
-        // --- 6. TEXT CONTENT SYNC ---
+        // --- 5. TEXT CONTENT SYNC ---
         document.getElementById("header-title-text").innerText = s.headerTitle;
         document.getElementById("welcome-h1").innerText = s.welcomeText;
         document.getElementById("welcome-p").innerText = s.welcomeSubtext;
         document.getElementById("card-msg-text").innerText = s.startConversationText;
         document.getElementById("card-reply-time").innerText = s.replyTimeText;
-        
-        if(s.welcomeImg) {
-          document.getElementById("main-support-avatar").src = s.welcomeImg;
-        }
+        if(s.welcomeImg) document.getElementById("main-support-avatar").src = s.welcomeImg;
       }
-    } catch (e) { 
-      console.error("Sync failed", e); 
-    }
+    } catch (e) { console.error("Sync failed", e); }
   }
 
   function switchTab(tabId) {
