@@ -11,11 +11,20 @@ const ICON_MAP = {
   send: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
 };
 
+const FONT_OPTIONS = [
+  { label: "System Default", value: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" },
+  { label: "Inter", value: "'Inter', sans-serif" },
+  { label: "Poppins", value: "'Poppins', sans-serif" },
+  { label: "Montserrat", value: "'Montserrat', sans-serif" },
+  { label: "Playfair Display", value: "'Playfair Display', serif" },
+  { label: "monospace", value: "ui-monospace, SFMono-Regular, monospace" }
+];
+
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
   const settings = await db.chatSettings.findUnique({ where: { shop: session.shop } });
   
-  return json(settings || {
+  const defaults = {
     primaryColor: "#4F46E5",
     headerBgColor: "#384959",
     heroBgColor: "#bdddfc",
@@ -25,14 +34,18 @@ export const loader = async ({ request }) => {
     cardSubtitleColor: "#64748b",
     onboardingTextColor: "#384959",
     launcherIcon: "bubble",
-    welcomeImg: "https://ui-avatars.com/api/?name=Support&background=fff&color=4F46E5", // Default
+    welcomeImg: "https://ui-avatars.com/api/?name=Support&background=fff&color=4F46E5",
     headerTitle: "Live Support",
     headerSubtitle: "Online now",
     welcomeText: "Hi there 👋",
     welcomeSubtext: "We are here to help you! Ask us anything.",
     replyTimeText: "Typically replies in 5 minutes",
-    startConversationText: "Send us a message"
-  });
+    startConversationText: "Send us a message",
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    baseFontSize: "15px"
+  };
+
+  return json(settings ? { ...defaults, ...settings } : defaults);
 };
 
 export const action = async ({ request }) => {
@@ -75,6 +88,7 @@ export default function UltimateSettings() {
         <nav style={{ flex: 1 }}>
           <NavButton active={activeTab === 'style'} onClick={() => setActiveTab('style')} label="Widget Style" icon="🎨" />
           <NavButton active={activeTab === 'content'} onClick={() => setActiveTab('content')} label="Translations" icon="🌐" />
+          <NavButton active={activeTab === 'typography'} onClick={() => setActiveTab('typography')} label="Typography" icon="Aa" />
         </nav>
       </div>
 
@@ -82,14 +96,18 @@ export default function UltimateSettings() {
       <div style={{ flex: 1, padding: '40px 50px' }}>
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
           <div>
-            <h1 style={{ fontSize: '28px', fontWeight: '800' }}>{activeTab === 'style' ? 'Appearance' : 'Content'}</h1>
+            <h1 style={{ fontSize: '28px', fontWeight: '800' }}>
+              {activeTab === 'style' && 'Appearance'}
+              {activeTab === 'content' && 'Content'}
+              {activeTab === 'typography' && 'Typography'}
+            </h1>
           </div>
-          <button onClick={handleSave} style={{ padding: '12px 28px', background: '#111827', color: '#FFF', borderRadius: '10px', fontWeight: '700', cursor: 'pointer' }}>
+          <button onClick={handleSave} style={{ padding: '12px 28px', background: '#111827', color: '#FFF', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', border: 'none' }}>
             {navigation.state === "submitting" ? "Syncing..." : "Save & Publish"}
           </button>
         </header>
 
-        {activeTab === 'style' ? (
+        {activeTab === 'style' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <Card title="Launcher Icon">
               <div style={{ display: 'flex', gap: '12px' }}>
@@ -102,12 +120,7 @@ export default function UltimateSettings() {
             </Card>
 
             <Card title="Brand Assets">
-               <Field 
-                  label="Support Avatar URL" 
-                  value={formState.welcomeImg} 
-                  onChange={(v) => handleChange('welcomeImg', v)} 
-                  placeholder="https://example.com/image.png"
-               />
+               <Field label="Support Avatar URL" value={formState.welcomeImg} onChange={(v) => handleChange('welcomeImg', v)} />
                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginTop: '20px' }}>
                 <ColorBox label="Primary Color" value={formState.primaryColor} onChange={(v) => handleChange('primaryColor', v)} />
                 <ColorBox label="Header BG" value={formState.headerBgColor} onChange={(v) => handleChange('headerBgColor', v)} />
@@ -125,7 +138,44 @@ export default function UltimateSettings() {
               </div>
             </Card>
           </div>
-        ) : (
+        )}
+
+        {activeTab === 'typography' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <Card title="Font Style">
+              <label style={{ display: 'block', fontSize: '12px', color: '#6B7280', fontWeight: '600', marginBottom: '8px' }}>Font Family</label>
+              <select 
+                value={formState.fontFamily} 
+                onChange={(e) => handleChange('fontFamily', e.target.value)}
+                style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #E5E7EB', fontSize: '14px', background: '#FFF' }}
+              >
+                {FONT_OPTIONS.map(font => (
+                  <option key={font.value} value={font.value}>{font.label}</option>
+                ))}
+              </select>
+
+              <div style={{ marginTop: '20px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#6B7280', fontWeight: '600', marginBottom: '8px' }}>Base Font Size: {formState.baseFontSize}</label>
+                <input 
+                  type="range" 
+                  min="12" 
+                  max="20" 
+                  step="1" 
+                  value={parseInt(formState.baseFontSize)} 
+                  onChange={(e) => handleChange('baseFontSize', `${e.target.value}px`)}
+                  style={{ width: '100%', cursor: 'pointer', accentColor: '#4F46E5' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#9CA3AF', marginTop: '5px' }}>
+                  <span>12px</span>
+                  <span>16px (Recommended)</span>
+                  <span>20px</span>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {activeTab === 'content' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <Card title="Text Settings">
                <Field label="Header Title" value={formState.headerTitle} onChange={(v) => handleChange('headerTitle', v)} />
@@ -143,19 +193,30 @@ export default function UltimateSettings() {
       <div style={{ width: '450px', padding: '40px', background: '#F9FAFB', borderLeft: '1px solid #E5E7EB', position: 'sticky', top: 0, height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ marginBottom: '20px', fontSize: '12px', fontWeight: '800', color: '#9CA3AF' }}>PREVIEW</div>
           
-          <div style={{ width: '350px', height: '580px', background: '#FFF', borderRadius: '28px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', border: '1px solid rgba(0,0,0,0.1)' }}>
+          <div style={{ 
+            width: '350px', 
+            height: '580px', 
+            background: '#FFF', 
+            borderRadius: '28px', 
+            overflow: 'hidden', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            boxShadow: '0 20px 40px rgba(0,0,0,0.1)', 
+            border: '1px solid rgba(0,0,0,0.1)',
+            fontFamily: formState.fontFamily // Applied Custom Font
+          }}>
             
             {/* Header */}
             <div style={{ background: formState.headerBgColor, padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <img 
                       src={formState.welcomeImg || "https://ui-avatars.com/api/?name=S"} 
-                      style={{ width: '40px', height: '40px', borderRadius: '12px', objectFit: 'cover', background: '#eee' }} 
+                      style={{ width: '40px', height: '40px', borderRadius: '12px', objectFit: 'cover' }} 
                       alt="avatar" 
                     />
                     <div>
-                        <div style={{ fontWeight: '700', color: formState.headerTextColor, fontSize: '15px' }}>{formState.headerTitle}</div>
-                        <div style={{ fontSize: '12px', color: formState.headerTextColor, opacity: 0.8 }}>{formState.headerSubtitle}</div>
+                        <div style={{ fontWeight: '700', color: formState.headerTextColor, fontSize: `calc(${formState.baseFontSize} * 1)` }}>{formState.headerTitle}</div>
+                        <div style={{ fontSize: `calc(${formState.baseFontSize} * 0.8)`, color: formState.headerTextColor, opacity: 0.8 }}>{formState.headerSubtitle}</div>
                     </div>
                 </div>
             </div>
@@ -163,25 +224,23 @@ export default function UltimateSettings() {
             {/* Content Body */}
             <div style={{ flex: 1, background: '#f8fafc', overflowY: 'auto' }}>
                 <div style={{ background: formState.heroBgColor, padding: '40px 25px', color: formState.heroTextColor }}>
-                    <h1 style={{ fontSize: '28px', fontWeight: '700', margin: '0 0 10px 0', color: 'inherit' }}>{formState.welcomeText}</h1>
-                    <p style={{ fontSize: '15px', margin: 0, color: 'inherit', opacity: 0.9 }}>{formState.welcomeSubtext}</p>
+                    <h1 style={{ fontSize: `calc(${formState.baseFontSize} * 1.8)`, fontWeight: '700', margin: '0 0 10px 0', color: 'inherit' }}>{formState.welcomeText}</h1>
+                    <p style={{ fontSize: formState.baseFontSize, margin: 0, color: 'inherit', opacity: 0.9 }}>{formState.welcomeSubtext}</p>
                 </div>
 
-                {/* Home Action Card */}
                 <div style={{ background: '#FFF', margin: '-30px 20px 0', padding: '20px', borderRadius: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 10px 20px rgba(0,0,0,0.05)', border: `2px solid ${formState.cardTitleColor}` }}>
                     <div>
-                        <div style={{ fontWeight: '700', color: formState.cardTitleColor, fontSize: '15px' }}>{formState.startConversationText}</div>
-                        <div style={{ fontSize: '13px', color: formState.cardSubtitleColor }}>{formState.replyTimeText}</div>
+                        <div style={{ fontWeight: '700', color: formState.cardTitleColor, fontSize: formState.baseFontSize }}>{formState.startConversationText}</div>
+                        <div style={{ fontSize: `calc(${formState.baseFontSize} * 0.85)`, color: formState.cardSubtitleColor }}>{formState.replyTimeText}</div>
                     </div>
                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: `${formState.primaryColor}22`, color: formState.primaryColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </div>
                 </div>
 
-                {/* Onboarding Preview Mockup */}
                 <div style={{ padding: '40px 25px', textAlign: 'center' }}>
-                    <h3 style={{ fontSize: '18px', fontWeight: '700', color: formState.onboardingTextColor, marginBottom: '8px' }}>Start a conversation</h3>
-                    <p style={{ fontSize: '14px', color: formState.onboardingTextColor, opacity: 0.8 }}>Previewing text color...</p>
+                    <h3 style={{ fontSize: `calc(${formState.baseFontSize} * 1.2)`, fontWeight: '700', color: formState.onboardingTextColor, marginBottom: '8px' }}>Start a conversation</h3>
+                    <p style={{ fontSize: `calc(${formState.baseFontSize} * 0.9)`, color: formState.onboardingTextColor, opacity: 0.8 }}>Previewing typography scaling...</p>
                 </div>
             </div>
 
@@ -205,12 +264,12 @@ export default function UltimateSettings() {
 // Sub-components
 const NavButton = ({ active, label, icon, onClick }) => (
     <div onClick={onClick} style={{ padding: '12px 16px', borderRadius: '10px', cursor: 'pointer', background: active ? '#EEF2FF' : 'transparent', color: active ? '#4F46E5' : '#4B5563', fontWeight: active ? '700' : '500', display: 'flex', gap: '12px', marginBottom: '5px' }}>
-      <span>{icon}</span> {label}
+      <span style={{ fontSize: '18px' }}>{icon}</span> {label}
     </div>
 );
 const Card = ({ title, children }) => (
     <div style={{ background: '#FFF', padding: '24px', borderRadius: '16px', border: '1px solid #E5E7EB', marginBottom: '20px' }}>
-      <h3 style={{ fontSize: '12px', fontWeight: '800', color: '#9CA3AF', marginBottom: '20px', textTransform: 'uppercase' }}>{title}</h3>
+      <h3 style={{ fontSize: '11px', fontWeight: '800', color: '#9CA3AF', marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{title}</h3>
       {children}
     </div>
 );

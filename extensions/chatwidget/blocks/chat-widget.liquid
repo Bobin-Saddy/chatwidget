@@ -175,55 +175,50 @@
   const chatInput = document.getElementById("chat-input");
   const fileInput = document.getElementById("chat-file-input");
 
-  async function fetchAndApplySettings() {
+async function fetchAndApplySettings() {
     try {
       const response = await fetch(`${BASE_URL}/api/chat-settings?shop=${shop}`);
       if (!response.ok) return;
       const s = await response.json();
       if (s) {
+        // 1. TYPOGRAPHY
+        if (s.fontFamily) {
+          widget.style.fontFamily = s.fontFamily;
+          if (!s.fontFamily.includes("system-ui")) {
+            const fontName = s.fontFamily.split(',')[0].replace(/['"]/g, '');
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/\s+/g, '+')}:wght@400;700&display=swap`;
+            document.head.appendChild(link);
+          }
+        }
+        if (s.baseFontSize) {
+          const base = parseInt(s.baseFontSize);
+          document.getElementById("welcome-p").style.fontSize = `${base}px`;
+          document.getElementById("welcome-h1").style.fontSize = `${base * 1.8}px`;
+          document.getElementById("card-msg-text").style.fontSize = `${base}px`;
+          document.getElementById("card-reply-time").style.fontSize = `${base * 0.85}px`;
+          document.getElementById("header-title-text").style.fontSize = `${base * 1.1}px`;
+        }
+
+        // 2. COLORS
         document.documentElement.style.setProperty('--chat-primary', s.primaryColor);
-        launcher.style.background = s.primaryColor;
+        document.getElementById("chat-launcher").style.background = s.primaryColor;
         document.getElementById("chat-send").style.background = s.primaryColor;
+        document.getElementById("chat-header").style.background = s.headerBgColor;
+        document.getElementById("chat-nav").style.background = s.headerBgColor;
+        document.getElementById("home-hero-bg").style.background = s.heroBgColor;
+        document.getElementById("chat-submit-info").style.background = s.primaryColor;
 
-        const header = document.getElementById("chat-header");
-        const nav = document.getElementById("chat-nav");
-        header.style.background = s.headerBgColor;
-        nav.style.background = s.headerBgColor;
-        
-        document.getElementById("header-title-text").style.color = s.headerTextColor;
-        document.getElementById("header-subtitle-text").style.color = s.headerTextColor;
-        document.getElementById("chat-close").style.color = s.headerTextColor;
-
-        const hero = document.getElementById("home-hero-bg");
-        hero.style.background = s.heroBgColor;
-        document.getElementById("welcome-h1").style.color = s.heroTextColor;
-        document.getElementById("welcome-p").style.color = s.heroTextColor;
-
-        const card = document.getElementById("start-chat-trigger");
-        card.style.borderColor = s.cardTitleColor;
-        document.getElementById("card-msg-text").style.color = s.cardTitleColor;
-        document.getElementById("card-reply-time").style.color = s.cardSubtitleColor;
-        
-        const cardArrow = document.getElementById("card-arrow-icon");
-        cardArrow.style.background = `${s.primaryColor}22`;
-        cardArrow.style.color = s.primaryColor;
-
-        document.getElementById("onboarding-title").style.color = s.onboardingTextColor;
-        document.getElementById("onboarding-p").style.color = s.onboardingTextColor;
-        
-        const submitBtn = document.getElementById("chat-submit-info");
-        submitBtn.style.background = s.primaryColor;
-        submitBtn.style.color = "#ffffff";
-
-        if (s.welcomeImg) document.getElementById("main-support-avatar").src = s.welcomeImg;
-
+        // 3. TEXT
         document.getElementById("header-title-text").innerText = s.headerTitle;
         document.getElementById("welcome-h1").innerText = s.welcomeText;
         document.getElementById("welcome-p").innerText = s.welcomeSubtext;
         document.getElementById("card-msg-text").innerText = s.startConversationText;
         document.getElementById("card-reply-time").innerText = s.replyTimeText;
+        if(s.welcomeImg) document.getElementById("main-support-avatar").src = s.welcomeImg;
       }
-    } catch (e) { console.error("Sync failed", e); }
+    } catch (e) { console.error("Setting sync failed", e); }
   }
 
   fetchAndApplySettings();
