@@ -174,24 +174,25 @@ async function fetchAndApplySettings() {
       document.getElementById("welcome-h1").style.color = s.heroTextColor;
       document.getElementById("welcome-p").style.color = s.heroTextColor;
 
-      // Home Card
+      // Home Card (New Colors applied here)
       const card = document.getElementById("start-chat-trigger");
       const cardTitle = document.getElementById("card-msg-text");
       const cardSub = document.getElementById("card-reply-time");
       const cardArrow = document.getElementById("card-arrow-icon");
       
-      card.style.borderColor = s.cardTitleColor || s.primaryColor;
+      card.style.borderColor = s.cardTitleColor; // Applied Card Title Color to border
       cardTitle.style.color = s.cardTitleColor;
       cardSub.style.color = s.cardSubtitleColor;
       cardArrow.style.background = `${s.primaryColor}22`;
       cardArrow.style.color = s.primaryColor;
 
-      // Onboarding Text
+      // Onboarding Step (New Colors applied here)
       document.getElementById("onboarding-title").style.color = s.onboardingTextColor;
       document.getElementById("onboarding-p").style.color = s.onboardingTextColor;
+      
       const submitBtn = document.getElementById("chat-submit-info");
-      submitBtn.style.background = s.headerBgColor;
-      submitBtn.style.color = s.heroBgColor; // High contrast auto-pair
+      submitBtn.style.background = s.primaryColor; // Using primary color for button
+      submitBtn.style.color = "#ffffff"; 
 
       // 2. ICONS
       const iconPaths = {
@@ -202,7 +203,12 @@ async function fetchAndApplySettings() {
       };
       if(s.launcherIcon && iconPaths[s.launcherIcon]) document.getElementById("launcher-icon").innerHTML = iconPaths[s.launcherIcon];
       
-      // 3. TEXT CONTENT
+      // 3. IMAGE UPDATE (New logic for Admin Image)
+      if (s.welcomeImg) {
+        document.getElementById("main-support-avatar").src = s.welcomeImg;
+      }
+
+      // 4. TEXT CONTENT
       document.getElementById("header-title-text").innerText = s.headerTitle;
       document.getElementById("header-subtitle-text").innerHTML = `<span class="pulse"></span> ${s.headerSubtitle}`;
       document.getElementById("welcome-h1").innerText = s.welcomeText;
