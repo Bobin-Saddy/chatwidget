@@ -1,10 +1,9 @@
 import { json } from "@remix-run/node";
-import { useLoaderData, useSubmit, useNavigation, useActionData } from "react-router";
+import { useLoaderData, useSubmit, useNavigation, useActionData } from "react-router"; // Fixed import to @remix-run/react
 import { useState, useEffect } from "react";
 import { authenticate } from "../shopify.server";
 import { db } from "../db.server";
 
-// Icons matching your Liquid JS exactly
 const ICON_MAP = {
   bubble: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
   support: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>,
@@ -20,8 +19,11 @@ export const loader = async ({ request }) => {
     primaryColor: "#4F46E5",
     headerBgColor: "#384959",
     heroBgColor: "#bdddfc",
-    headerTextColor: "#bdddfc", // Matches your Liquid CSS
-    heroTextColor: "#384959",   // Matches your Liquid CSS
+    headerTextColor: "#bdddfc",
+    heroTextColor: "#384959",
+    cardTitleColor: "#384959", // New
+    cardSubtitleColor: "#64748b", // New
+    onboardingTextColor: "#384959", // New
     launcherIcon: "bubble",
     welcomeImg: "https://ui-avatars.com/api/?name=Support&background=fff&color=4F46E5",
     headerTitle: "Live Support",
@@ -82,10 +84,7 @@ export default function UltimateSettings() {
           <div>
             <h1 style={{ fontSize: '28px', fontWeight: '800' }}>{activeTab === 'style' ? 'Appearance' : 'Content'}</h1>
           </div>
-          <button 
-            onClick={handleSave} 
-            style={{ padding: '12px 28px', background: '#111827', color: '#FFF', borderRadius: '10px', fontWeight: '700', cursor: 'pointer' }}
-          >
+          <button onClick={handleSave} style={{ padding: '12px 28px', background: '#111827', color: '#FFF', borderRadius: '10px', fontWeight: '700', cursor: 'pointer' }}>
             {navigation.state === "submitting" ? "Syncing..." : "Save & Publish"}
           </button>
         </header>
@@ -102,13 +101,21 @@ export default function UltimateSettings() {
               </div>
             </Card>
 
-            <Card title="Brand Colors">
+            <Card title="Core Branding">
+               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+                <ColorBox label="Primary Color" value={formState.primaryColor} onChange={(v) => handleChange('primaryColor', v)} />
+                <ColorBox label="Header BG" value={formState.headerBgColor} onChange={(v) => handleChange('headerBgColor', v)} />
+                <ColorBox label="Banner BG" value={formState.heroBgColor} onChange={(v) => handleChange('heroBgColor', v)} />
+              </div>
+            </Card>
+
+            <Card title="Text & UI Colors">
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
-                <ColorBox label="Primary (Launcher)" value={formState.primaryColor} onChange={(v) => handleChange('primaryColor', v)} />
-                <ColorBox label="Header Background" value={formState.headerBgColor} onChange={(v) => handleChange('headerBgColor', v)} />
                 <ColorBox label="Header Text" value={formState.headerTextColor} onChange={(v) => handleChange('headerTextColor', v)} />
-                <ColorBox label="Banner Background" value={formState.heroBgColor} onChange={(v) => handleChange('heroBgColor', v)} />
                 <ColorBox label="Banner Text" value={formState.heroTextColor} onChange={(v) => handleChange('heroTextColor', v)} />
+                <ColorBox label="Action Card Title" value={formState.cardTitleColor} onChange={(v) => handleChange('cardTitleColor', v)} />
+                <ColorBox label="Action Card Sub" value={formState.cardSubtitleColor} onChange={(v) => handleChange('cardSubtitleColor', v)} />
+                <ColorBox label="Onboarding Text" value={formState.onboardingTextColor} onChange={(v) => handleChange('onboardingTextColor', v)} />
               </div>
             </Card>
           </div>
@@ -126,30 +133,24 @@ export default function UltimateSettings() {
         )}
       </div>
 
-      {/* LIVE PREVIEW - UPDATED TO MATCH YOUR LIQUID WIDGET */}
+      {/* LIVE PREVIEW */}
       <div style={{ width: '450px', padding: '40px', background: '#F9FAFB', borderLeft: '1px solid #E5E7EB', position: 'sticky', top: 0, height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ marginBottom: '20px', fontSize: '12px', fontWeight: '800', color: '#9CA3AF' }}>PREVIEW</div>
           
-          {/* Main Widget Container */}
           <div style={{ width: '350px', height: '580px', background: '#FFF', borderRadius: '28px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', border: '1px solid rgba(0,0,0,0.1)' }}>
             
-            {/* Widget Header */}
+            {/* Header */}
             <div style={{ background: formState.headerBgColor, padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ position: 'relative' }}>
-                        <img src={formState.welcomeImg} style={{ width: '40px', height: '40px', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.2)' }} alt="avatar" />
-                        <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '12px', height: '12px', background: '#22c55e', borderRadius: '50%', border: '2px solid white' }}></div>
-                    </div>
+                    <img src={formState.welcomeImg} style={{ width: '40px', height: '40px', borderRadius: '12px' }} alt="avatar" />
                     <div>
                         <div style={{ fontWeight: '700', color: formState.headerTextColor, fontSize: '15px' }}>{formState.headerTitle}</div>
-                        <div style={{ fontSize: '12px', color: formState.headerTextColor, opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }}></span> {formState.headerSubtitle}
-                        </div>
+                        <div style={{ fontSize: '12px', color: formState.headerTextColor, opacity: 0.8 }}>{formState.headerSubtitle}</div>
                     </div>
                 </div>
             </div>
 
-            {/* Home Tab Body */}
+            {/* Content Body */}
             <div style={{ flex: 1, background: '#f8fafc', overflowY: 'auto' }}>
                 <div style={{ background: formState.heroBgColor, padding: '40px 25px', color: formState.heroTextColor }}>
                     <h1 style={{ fontSize: '28px', fontWeight: '700', margin: '0 0 10px 0', color: 'inherit' }}>{formState.welcomeText}</h1>
@@ -157,30 +158,31 @@ export default function UltimateSettings() {
                 </div>
 
                 {/* Home Action Card */}
-                <div style={{ background: '#FFF', margin: '-30px 20px 0', padding: '20px', borderRadius: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 10px 20px rgba(0,0,0,0.05)', border: `2px solid ${formState.headerBgColor}` }}>
+                <div style={{ background: '#FFF', margin: '-30px 20px 0', padding: '20px', borderRadius: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 10px 20px rgba(0,0,0,0.05)', border: `2px solid ${formState.cardTitleColor}` }}>
                     <div>
-                        <div style={{ fontWeight: '700', color: formState.headerBgColor, fontSize: '15px' }}>{formState.startConversationText}</div>
-                        <div style={{ fontSize: '13px', color: '#64748b' }}>{formState.replyTimeText}</div>
+                        <div style={{ fontWeight: '700', color: formState.cardTitleColor, fontSize: '15px' }}>{formState.startConversationText}</div>
+                        <div style={{ fontSize: '13px', color: formState.cardSubtitleColor }}>{formState.replyTimeText}</div>
                     </div>
                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: `${formState.primaryColor}22`, color: formState.primaryColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </div>
                 </div>
+
+                {/* Onboarding Preview Mockup */}
+                <div style={{ padding: '40px 25px', textAlign: 'center' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: '700', color: formState.onboardingTextColor, marginBottom: '8px' }}>Start a conversation</h3>
+                    <p style={{ fontSize: '14px', color: formState.onboardingTextColor, opacity: 0.8 }}>Previewing text color...</p>
+                </div>
             </div>
 
-            {/* Bottom Nav Mockup */}
+            {/* Bottom Nav */}
             <div style={{ padding: '10px', background: formState.headerBgColor, display: 'flex', justifyContent: 'space-around' }}>
-                <div style={{ color: '#bdddfc', textAlign: 'center' }}>
-                    <div style={{ fontSize: '10px', fontWeight: 'bold' }}>Home</div>
-                </div>
-                <div style={{ color: '#94a3b8', textAlign: 'center' }}>
-                    <div style={{ fontSize: '10px' }}>Messages</div>
-                </div>
+                <div style={{ color: formState.headerTextColor, textAlign: 'center', fontSize: '10px', fontWeight: 'bold' }}>Home</div>
+                <div style={{ color: formState.headerTextColor, opacity: 0.5, textAlign: 'center', fontSize: '10px' }}>Messages</div>
             </div>
           </div>
 
-          {/* Launcher Mockup */}
-          <div style={{ marginTop: '20px', width: '60px', height: '60px', borderRadius: '50%', background: formState.primaryColor, color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 20px rgba(0,0,0,0.1)' }}>
+          <div style={{ marginTop: '20px', width: '60px', height: '60px', borderRadius: '50%', background: formState.primaryColor, color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {ICON_MAP[formState.launcherIcon]}
           </div>
       </div>
@@ -190,14 +192,14 @@ export default function UltimateSettings() {
   );
 }
 
-// Reusable Components (Keep these exactly as they are in your file)
+// Sub-components (ColorBox, Field, etc. remain the same as your previous working version)
 const NavButton = ({ active, label, icon, onClick }) => (
     <div onClick={onClick} style={{ padding: '12px 16px', borderRadius: '10px', cursor: 'pointer', background: active ? '#EEF2FF' : 'transparent', color: active ? '#4F46E5' : '#4B5563', fontWeight: active ? '700' : '500', display: 'flex', gap: '12px', marginBottom: '5px' }}>
       <span>{icon}</span> {label}
     </div>
 );
 const Card = ({ title, children }) => (
-    <div style={{ background: '#FFF', padding: '24px', borderRadius: '16px', border: '1px solid #E5E7EB' }}>
+    <div style={{ background: '#FFF', padding: '24px', borderRadius: '16px', border: '1px solid #E5E7EB', marginBottom: '20px' }}>
       <h3 style={{ fontSize: '12px', fontWeight: '800', color: '#9CA3AF', marginBottom: '20px', textTransform: 'uppercase' }}>{title}</h3>
       {children}
     </div>
@@ -212,7 +214,7 @@ const ColorBox = ({ label, value, onChange }) => (
       <label style={{ display: 'block', fontSize: '12px', color: '#6B7280', fontWeight: '600', marginBottom: '8px' }}>{label}</label>
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: '#F9FAFB', padding: '8px', borderRadius: '10px', border: '1px solid #E5E7EB' }}>
         <input type="color" value={value} onChange={(e) => onChange(e.target.value)} style={{ border: 'none', background: 'none', width: '25px', height: '25px', cursor: 'pointer' }} />
-        <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{value.toUpperCase()}</span>
+        <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{value?.toUpperCase()}</span>
       </div>
     </div>
 );

@@ -64,6 +64,9 @@ model ChatSettings {
   heroBgColor           String   @default("#EEF2FF")
   headerTextColor       String   @default("#FFFFFF")
   heroTextColor         String   @default("#111827")
+  cardTitleColor        String   @default("#384959") // New
+  cardSubtitleColor     String   @default("#64748b") // New
+  onboardingTextColor   String   @default("#384959") // New
   welcomeImg            String   @default("https://ui-avatars.com/api/?name=Support&background=4F46E5&color=fff")
   headerTitle           String   @default("Customer Care")
   headerSubtitle        String   @default("Online & Ready")
